@@ -1,0 +1,33 @@
+[versions]
+aws-sdk = "2.39.3"
+mapstruct = "1.6.3"
+lombok-mapstruct-binding = "0.2.0"
+hibernate-jpamodelgen = "7.1.8.Final"
+spring-modulith = "2.0.0"
+uuid-creator = "6.1.0"
+slugify = "3.0.7"
+icu4j = "78.1"
+testcontainers-minio = "2.0.2"
+
+[libraries]
+# AWS SDK for S3
+awssdk-s3 = { group = "software.amazon.awssdk", name = "s3", version.ref = "aws-sdk" }
+
+# Mapping
+mapstruct = { group = "org.mapstruct", name = "mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { group = "org.mapstruct", name = "mapstruct-processor", version.ref = "mapstruct" }
+lombok-mapstruct-binding = { group = "org.projectlombok", name = "lombok-mapstruct-binding", version.ref = "lombok-mapstruct-binding" }
+
+# Persistence
+hibernate-jpamodelgen = { group = "org.hibernate", name = "hibernate-jpamodelgen", version.ref = "hibernate-jpamodelgen" }
+
+# Spring Modulith BOM
+spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
+
+# Utils
+uuid-creator = { group = "com.github.f4b6a3", name = "uuid-creator", version.ref = "uuid-creator" }
+slugify = { group = "com.github.slugify", name = "slugify", version.ref = "slugify" }
+icu4j = { group = "com.ibm.icu", name = "icu4j", version.ref = "icu4j" }
+
+# Tests
+testcontainers-minio = { group = "org.testcontainers", name = "testcontainers-minio", version.ref = "testcontainers-minio" }

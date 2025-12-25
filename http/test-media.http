@@ -1,0 +1,27 @@
+### Get file upload URL
+POST http://localhost:8080/api/v1/media/upload-url
+Content-Type: application/json
+
+{
+  "originalFilename": "skate_cat.jpg",
+  "contentType": "image/jpg"
+}
+
+> {%
+    client.global.set("media_id", response.body.id);
+    client.global.set("upload_url", response.body.url);
+    client.log("Media ID: " + response.body.id);
+    client.log("Upload URL: " + response.body.url);
+%}
+
+### Upload file via URL
+PUT {{upload_url}}
+Content-Type: image/jpg
+
+< ../misc/images/skate_cat.jpg
+
+### Get file download URL
+GET http://localhost:8080/api/v1/media/{{media_id}}/url
+
+### Delete file
+DELETE http://localhost:8080/api/v1/media/{{media_id}}

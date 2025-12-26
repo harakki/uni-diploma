@@ -2,6 +2,7 @@ package dev.harakki.comics.catalog.dto;
 
 import dev.harakki.comics.catalog.domain.*;
 
+import java.time.Year;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -16,7 +17,7 @@ public record TitleResponse(
         String description,
         TitleType type,
         TitleStatus titleStatus,
-        Short releaseYear,
+        Year releaseYear,
         ContentRating contentRating,
         Boolean isLicensed,
         String countryIsoCode,

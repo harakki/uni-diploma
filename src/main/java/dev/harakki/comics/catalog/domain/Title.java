@@ -1,6 +1,7 @@
 package dev.harakki.comics.catalog.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 import org.springframework.data.annotation.CreatedBy;
@@ -10,6 +11,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.time.Year;
 import java.util.*;
 
 @Getter
@@ -49,8 +51,9 @@ public class Title {
     @Enumerated(EnumType.STRING)
     private TitleStatus titleStatus;
 
-    private Short releaseYear;
-    
+    @PastOrPresent
+    private Year releaseYear;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ContentRating contentRating;
@@ -81,7 +84,7 @@ public class Title {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new LinkedHashSet<>();
-    
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

@@ -1,6 +1,7 @@
 package dev.harakki.comics.media.dto;
 
 import dev.harakki.comics.media.domain.Media;
+import jakarta.validation.constraints.*;
 
 import java.io.Serializable;
 
@@ -15,9 +16,9 @@ import java.io.Serializable;
  * @param height           the height of the media
  */
 public record MediaUploadUrlRequestDto(
-        String originalFilename,
-        String contentType,
-        Integer width,
-        Integer height
+        @NotBlank @Size(min=1, max=255) String originalFilename,
+        @NotBlank String contentType,
+        @NotNull @Positive @Max(4100) Integer width,
+        @NotNull @Positive Integer height
 ) implements Serializable {
 }

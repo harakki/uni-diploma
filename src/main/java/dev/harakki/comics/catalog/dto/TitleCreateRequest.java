@@ -7,17 +7,17 @@ import dev.harakki.comics.catalog.domain.TitleType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.Year;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 public record TitleCreateRequest(
         @NotBlank String name,
-        String slug,
         String description,
         @NotNull TitleType type,
         @NotNull TitleStatus titleStatus,
-        Short releaseYear,
+        Year releaseYear,
         @NotNull ContentRating contentRating,
         @NotBlank String countryIsoCode,
         UUID mainCoverMediaId,

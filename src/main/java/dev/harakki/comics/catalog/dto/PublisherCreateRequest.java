@@ -7,7 +7,6 @@ import java.util.UUID;
 
 public record PublisherCreateRequest(
         @NotBlank String name,
-        String slug,
         String description,
         List<String> websiteUrls,
         String countryIsoCode,

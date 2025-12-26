@@ -5,9 +5,11 @@ import dev.harakki.comics.catalog.dto.TagCreateRequest;
 import dev.harakki.comics.catalog.dto.TagResponse;
 import dev.harakki.comics.catalog.dto.TagUpdateRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,12 +29,12 @@ class TagController {
     }
 
     @PutMapping("/{id}")
-    public TagResponse updateTag(@PathVariable UUID id, @RequestBody @Valid TagUpdateRequest request) {
+    public TagResponse updateTag(@PathVariable @NotNull UUID id, @RequestBody @Valid TagUpdateRequest request) {
         return tagService.update(id, request);
     }
 
     @GetMapping("/{id}")
-    public TagResponse getTag(@PathVariable UUID id) {
+    public TagResponse getTag(@PathVariable @NotNull UUID id) {
         return tagService.getById(id);
     }
 
@@ -42,13 +44,13 @@ class TagController {
     }
 
     @GetMapping
-    public Page<TagResponse> getAllTags(Pageable pageable) {
+    public Page<TagResponse> getAllTags(@PageableDefault(sort = "name") Pageable pageable) {
         return tagService.getAll(pageable);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTag(@PathVariable UUID id) {
+    public void deleteTag(@PathVariable @NotNull UUID id) {
         tagService.delete(id);
     }
 

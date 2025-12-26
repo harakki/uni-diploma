@@ -5,9 +5,11 @@ import dev.harakki.comics.catalog.dto.AuthorResponse;
 import dev.harakki.comics.catalog.dto.AuthorCreateRequest;
 import dev.harakki.comics.catalog.dto.AuthorUpdateRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,23 +34,23 @@ class AuthorController {
     }
 
     @GetMapping("/{id}")
-    public AuthorResponse getAuthor(@PathVariable UUID id) {
+    public AuthorResponse getAuthor(@PathVariable @NotNull UUID id) {
         return authorService.getById(id);
     }
 
     @GetMapping("/slug/{slug}")
-    public AuthorResponse getAuthorBySlug(@PathVariable String slug) {
+    public AuthorResponse getAuthorBySlug(@PathVariable @NotNull String slug) {
         return authorService.getBySlug(slug);
     }
 
     @GetMapping
-    public Page<AuthorResponse> getAllAuthors(Pageable pageable) {
+    public Page<AuthorResponse> getAllAuthors(@PageableDefault(sort = "name") Pageable pageable) {
         return authorService.getAll(pageable);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteAuthor(@PathVariable UUID id) {
+    public void deleteAuthor(@PathVariable @NotNull UUID id) {
         authorService.delete(id);
     }
 

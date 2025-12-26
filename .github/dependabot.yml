@@ -9,9 +9,6 @@ updates:
       actions:
         patterns:
           - "*"
-    labels:
-      - "dependencies"
-      - "github-actions"
     rebase-strategy: "auto"
 
   - package-ecosystem: "gradle"
@@ -27,6 +24,3 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    labels:
-      - "dependencies"
-      - "gradle"

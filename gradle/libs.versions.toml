@@ -7,6 +7,7 @@ spring-modulith = "2.0.1"
 uuid-creator = "6.1.1"
 slugify = "3.0.7"
 icu4j = "78.1"
+mockito-core = "5.+"
 testcontainers-minio = "2.0.3"
 
 [libraries]
@@ -30,4 +31,5 @@ slugify = { group = "com.github.slugify", name = "slugify", version.ref = "slugi
 icu4j = { group = "com.ibm.icu", name = "icu4j", version.ref = "icu4j" }
 
 # Tests
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }
 testcontainers-minio = { group = "org.testcontainers", name = "testcontainers-minio", version.ref = "testcontainers-minio" }

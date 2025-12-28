@@ -6,6 +6,7 @@ import dev.harakki.comics.catalog.dto.TitleResponse;
 import dev.harakki.comics.catalog.dto.TitleUpdateRequest;
 import dev.harakki.comics.catalog.dto.UpdateTitleAddAuthorRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,11 @@ class TitleController {
         titleService.delete(id);
     }
 
+    @PutMapping("/{id}/slug")
+    public TitleResponse updateTitleSlug(@PathVariable @NotNull UUID id, @RequestBody @NotBlank String slug) {
+        return titleService.updateSlug(id, slug);
+    }
+
     @PostMapping("/{id}/authors")
     public void addAuthor(@PathVariable @NotNull UUID id, @RequestBody @Valid UpdateTitleAddAuthorRequest request) {
         titleService.addAuthor(id, request.authorId(), request.role());
@@ -66,6 +72,12 @@ class TitleController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAuthor(@PathVariable @NotNull UUID id, @PathVariable @NotNull UUID authorId) {
         titleService.removeAuthor(id, authorId);
+    }
+
+    @DeleteMapping("/{id}/publisher")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removePublisher(@PathVariable @NotNull UUID id) {
+        titleService.removePublisher(id);
     }
 
     @PostMapping("/{id}/tags")

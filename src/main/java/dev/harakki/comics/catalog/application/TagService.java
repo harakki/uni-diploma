@@ -6,6 +6,7 @@ import dev.harakki.comics.catalog.dto.TagUpdateRequest;
 import dev.harakki.comics.catalog.infrastructure.TagMapper;
 import dev.harakki.comics.catalog.infrastructure.TagRepository;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
+import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,8 @@ public class TagService {
     private final TagMapper tagMapper;
 
     private final SlugGenerator slugGenerator;
-    
+
+    @Transactional
     public TagResponse create(TagCreateRequest request) {
         if (tagRepository.existsByName(request.name())) {
             throw new ResourceAlreadyExistsException("Tag with name '" + request.name() + "' already exists");
@@ -56,15 +58,34 @@ public class TagService {
 
     }
 
+    @Transactional
     public TagResponse update(UUID id, TagUpdateRequest request) {
         var tag = tagRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tag with id " + id + " not found"));
 
-        tagMapper.partialUpdate(request, tag);
+        if (request.slug() != null && tagRepository.existsBySlugAndIdNot(request.slug(), id)) {
+            throw new ResourceAlreadyExistsException("Tag with slug '" + request.slug() + "' already exists");
+        }
+
+        tag = tagMapper.partialUpdate(request, tag);
 
         tag = tagRepository.save(tag);
         log.debug("Updated tag: id={}", id);
 
+        return tagMapper.toResponse(tag);
+    }
+
+    @Transactional
+    public TagResponse updateSlug(UUID id, String slug) {
+        var tag = tagRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tag with id " + id + " not found"));
+
+        if (tagRepository.existsBySlugAndIdNot(slug, id)) {
+            throw new ResourceAlreadyExistsException("Tag with slug '" + slug + "' already exists");
+        }
+
+        tag.setSlug(slug);
+        tag = tagRepository.save(tag);
         return tagMapper.toResponse(tag);
     }
 
@@ -85,12 +106,16 @@ public class TagService {
                 .map(tagMapper::toResponse);
     }
 
+    @Transactional
     public void delete(UUID id) {
         var tag = tagRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tag with id " + id + " not found"));
-        
-        tagRepository.delete(tag);
-        log.info("Deleted tag: id={}", id);
+        try {
+            tagRepository.delete(tag);
+            log.info("Deleted tag: id={}", id);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResourceInUseException("Cannot delete tag with id " + id + " because it is referenced by titles");
+        }
     }
-    
+
 }

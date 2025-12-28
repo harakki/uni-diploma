@@ -6,6 +6,7 @@ import dev.harakki.comics.catalog.dto.PublisherUpdateRequest;
 import dev.harakki.comics.catalog.infrastructure.PublisherMapper;
 import dev.harakki.comics.catalog.infrastructure.PublisherRepository;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
+import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,11 +55,29 @@ public class PublisherService {
         var publisher = publisherRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Publisher with id " + id + " not found"));
 
-        publisherMapper.partialUpdate(request, publisher);
+        if (request.name() != null && publisherRepository.existsByNameAndIdNot(request.name(), id)) {
+            throw new ResourceAlreadyExistsException("Publisher with name '" + request.name() + "' already exists");
+        }
+
+        publisher = publisherMapper.partialUpdate(request, publisher);
 
         publisher = publisherRepository.save(publisher);
         log.debug("Updated publisher: id={}", id);
 
+        return publisherMapper.toResponse(publisher);
+    }
+
+    @Transactional
+    public PublisherResponse updateSlug(UUID id, String slug) {
+        var publisher = publisherRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Publisher with id " + id + " not found"));
+
+        if (publisherRepository.existsBySlugAndIdNot(slug, id)) {
+            throw new ResourceAlreadyExistsException("Publisher with slug '" + slug + "' already exists");
+        }
+
+        publisher.setSlug(slug);
+        publisher = publisherRepository.save(publisher);
         return publisherMapper.toResponse(publisher);
     }
 
@@ -85,9 +104,12 @@ public class PublisherService {
     public void delete(UUID id) {
         var publisher = publisherRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Publisher with id " + id + " not found"));
-
-        publisherRepository.delete(publisher);
-        log.info("Deleted publisher: id={}", id);
+        try {
+            publisherRepository.delete(publisher);
+            log.info("Deleted publisher: id={}", id);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResourceInUseException("Cannot delete publisher with id " + id + " because it is referenced by titles");
+        }
     }
 
 }

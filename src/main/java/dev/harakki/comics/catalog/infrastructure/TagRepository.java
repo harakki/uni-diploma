@@ -13,7 +13,11 @@ public interface TagRepository extends JpaRepository<Tag, UUID> {
 
     boolean existsByName(@NotBlank String name);
 
+    boolean existsByNameAndIdNot(@NotBlank String name, UUID id);
+
     boolean existsBySlug(@NotBlank String slug);
+
+    boolean existsBySlugAndIdNot(@NotBlank String slug, UUID id);
 
     Optional<Tag> findBySlug(String slug);
 

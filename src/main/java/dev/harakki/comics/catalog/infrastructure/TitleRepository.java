@@ -16,6 +16,8 @@ public interface TitleRepository extends JpaRepository<Title, UUID>, JpaSpecific
 
     boolean existsBySlug(String slug);
 
+    boolean existsBySlugAndIdNot(@NotBlank String slug, UUID id);
+
     Optional<Title> findBySlug(String slug);
-    
+
 }

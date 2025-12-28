@@ -5,6 +5,7 @@ import dev.harakki.comics.catalog.dto.PublisherCreateRequest;
 import dev.harakki.comics.catalog.dto.PublisherResponse;
 import dev.harakki.comics.catalog.dto.PublisherUpdateRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,7 +18,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/")
+@RequestMapping("/api/v1/publishers")
 class PublisherController {
 
     private final PublisherService publisherService;
@@ -52,6 +53,11 @@ class PublisherController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePublisher(@PathVariable @NotNull UUID id) {
         publisherService.delete(id);
+    }
+
+    @PutMapping("/{id}/slug")
+    public PublisherResponse updatePublisherSlug(@PathVariable @NotNull UUID id, @RequestBody @NotBlank String slug) {
+        return publisherService.updateSlug(id, slug);
     }
 
 }

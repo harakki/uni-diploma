@@ -10,11 +10,13 @@ import java.util.UUID;
 
 @Repository
 public interface AuthorRepository extends JpaRepository<Author, UUID> {
-    
+
     boolean existsByName(@NotBlank String name);
 
     boolean existsBySlug(String slug);
 
+    boolean existsBySlugAndIdNot(@NotBlank String slug, UUID id);
+
     Optional<Author> findBySlug(String slug);
-    
+
 }

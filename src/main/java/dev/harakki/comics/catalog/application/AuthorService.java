@@ -6,6 +6,7 @@ import dev.harakki.comics.catalog.dto.AuthorUpdateRequest;
 import dev.harakki.comics.catalog.infrastructure.AuthorMapper;
 import dev.harakki.comics.catalog.infrastructure.AuthorRepository;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
+import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,11 +55,25 @@ public class AuthorService {
         var author = authorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
 
-        authorMapper.partialUpdate(request, author);
+        author = authorMapper.partialUpdate(request, author);
         
         author = authorRepository.save(author);
-        log.debug("Updated publisher: id={}", id);
+        log.debug("Updated author: id={}", id);
 
+        return authorMapper.toResponse(author);
+    }
+
+    @Transactional
+    public AuthorResponse updateSlug(UUID id, String slug) {
+        var author = authorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
+
+        if (authorRepository.existsBySlugAndIdNot(slug, id)) {
+            throw new ResourceAlreadyExistsException("Author with slug " + slug + " already exists");
+        }
+
+        author.setSlug(slug);
+        author = authorRepository.save(author);
         return authorMapper.toResponse(author);
     }
 
@@ -85,8 +100,12 @@ public class AuthorService {
     public void delete(UUID id) {
         var author = authorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
-        authorRepository.delete(author);
-        log.info("Deleted author: id={}", id);
+        try {
+            authorRepository.delete(author);
+            log.info("Deleted author: id={}", id);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResourceInUseException("Cannot delete author with id " + id + " because it is referenced by titles");
+        }
     }
 
 }

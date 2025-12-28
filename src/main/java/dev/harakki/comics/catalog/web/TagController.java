@@ -5,6 +5,7 @@ import dev.harakki.comics.catalog.dto.TagCreateRequest;
 import dev.harakki.comics.catalog.dto.TagResponse;
 import dev.harakki.comics.catalog.dto.TagUpdateRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,7 +18,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/")
+@RequestMapping("/api/v1/tags")
 class TagController {
 
     private final TagService tagService;
@@ -52,6 +53,11 @@ class TagController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTag(@PathVariable @NotNull UUID id) {
         tagService.delete(id);
+    }
+
+    @PutMapping("/{id}/slug")
+    public TagResponse updateTagSlug(@PathVariable @NotNull UUID id, @RequestBody @NotBlank String slug) {
+        return tagService.updateSlug(id, slug);
     }
 
 }

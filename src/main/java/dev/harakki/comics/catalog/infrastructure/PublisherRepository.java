@@ -13,7 +13,11 @@ public interface PublisherRepository extends JpaRepository<Publisher, UUID> {
 
     boolean existsByName(@NotBlank String name);
 
+    boolean existsByNameAndIdNot(@NotBlank String name, UUID id);
+
     boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndIdNot(@NotBlank String slug, UUID id);
 
     Optional<Publisher> findBySlug(String slug);
     

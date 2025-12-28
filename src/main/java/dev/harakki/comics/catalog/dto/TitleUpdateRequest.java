@@ -15,6 +15,7 @@ public record TitleUpdateRequest(
         Year releaseYear,
         ContentRating contentRating,
         String countryIsoCode,
-        UUID mainCoverMediaId
+        UUID mainCoverMediaId,
+        UUID publisherId
 ) {
 }

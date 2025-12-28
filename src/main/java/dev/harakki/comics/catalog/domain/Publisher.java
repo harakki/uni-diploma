@@ -31,7 +31,7 @@ public class Publisher {
     @Column(updatable = false)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @EqualsAndHashCode.Include

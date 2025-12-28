@@ -5,6 +5,7 @@ import dev.harakki.comics.catalog.dto.AuthorResponse;
 import dev.harakki.comics.catalog.dto.AuthorCreateRequest;
 import dev.harakki.comics.catalog.dto.AuthorUpdateRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -52,6 +53,11 @@ class AuthorController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAuthor(@PathVariable @NotNull UUID id) {
         authorService.delete(id);
+    }
+
+    @PutMapping("/{id}/slug")
+    public AuthorResponse updateAuthorSlug(@PathVariable @NotNull UUID id, @RequestBody @NotBlank String slug) {
+        return authorService.updateSlug(id, slug);
     }
 
 }

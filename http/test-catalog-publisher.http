@@ -1,0 +1,38 @@
+### Create publisher "Shueisha"
+POST http://localhost:8080/api/v1/publishers
+Content-Type: application/json
+
+{
+  "name": "Shueisha"
+}
+
+> {%
+    client.global.set("publisher_id", response.body.id);
+    client.global.set("publisher_slug", response.body.slug);
+    client.log("Publisher ID: " + response.body.id);
+    client.log("Slug: " + response.body.slug);
+ %}
+
+### Update publisher "Shueisha"
+PUT http://localhost:8080/api/v1/publishers/{{publisher_id}}
+Content-Type: application/json
+
+{
+  "name": "MANGA Plus",
+  "countryIsoCode": "JP"
+}
+
+### Get publisher "Shueisha" by id
+GET http://localhost:8080/api/v1/publishers/{{publisher_id}}
+Content-Type: application/json
+
+### Get publisher "Shueisha" by slug
+GET http://localhost:8080/api/v1/publishers/slug/{{publisher_slug}}
+Content-Type: application/json
+
+### Get all publishers
+GET http://localhost:8080/api/v1/publishers
+Content-Type: application/json
+
+### Delete publisher "Shueisha"
+DELETE http://localhost:8080/api/v1/publishers/{{publisher_id}}

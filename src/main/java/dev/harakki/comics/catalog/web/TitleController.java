@@ -95,37 +95,37 @@ class TitleController {
     @PostMapping("/{id}/authors")
     @Operation(summary = "Add author", description = "Link an author to the title.")
     @ApiResponse(responseCode = "200", description = "Author added")
-    public void addAuthor(
+    public TitleResponse addAuthor(
             @PathVariable @NotNull UUID id,
             @RequestBody @Valid TitleAddAuthorRequest request
     ) {
-        titleService.addAuthor(id, request.authorId(), request.role());
+        return titleService.addAuthor(id, request.authorId(), request.role());
     }
 
     @DeleteMapping("/{id}/authors/{authorId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove author", description = "Unlink an author from the title.")
-    public void removeAuthor(
+    public TitleResponse removeAuthor(
             @PathVariable @NotNull UUID id,
             @PathVariable @NotNull UUID authorId
     ) {
-        titleService.removeAuthor(id, authorId);
+        return titleService.removeAuthor(id, authorId);
     }
 
     @DeleteMapping("/{id}/publisher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove publisher", description = "Unlink the publisher from the title.")
-    public void removePublisher(@PathVariable @NotNull UUID id) {
-        titleService.removePublisher(id);
+    public TitleResponse removePublisher(@PathVariable @NotNull UUID id) {
+        return titleService.removePublisher(id);
     }
 
     @PostMapping("/{id}/tags")
     @Operation(summary = "Replace tags", description = "Fully replace the set of tags.")
-    public void updateTags(
+    public TitleResponse updateTags(
             @PathVariable @NotNull UUID id,
             @RequestBody @Valid ReplaceTagsRequest request
     ) {
-        titleService.updateTags(id, request);
+        return titleService.updateTags(id, request);
     }
 
 }

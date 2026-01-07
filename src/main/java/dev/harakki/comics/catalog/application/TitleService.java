@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -129,8 +130,8 @@ public class TitleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Title with slug '" + slug + "' not found"));
     }
 
-    public Page<TitleResponse> getAll(Pageable pageable) {
-        return titleRepository.findAll(pageable)
+    public Page<TitleResponse> getAll(Specification<Title> spec, Pageable pageable) {
+        return titleRepository.findAll(spec, pageable)
                 .map(titleMapper::toResponse);
     }
 
@@ -147,7 +148,7 @@ public class TitleService {
     }
 
     @Transactional
-    public void addAuthor(UUID titleId, @NotNull UUID authorId, @NotNull AuthorRole role) {
+    public TitleResponse addAuthor(UUID titleId, @NotNull UUID authorId, @NotNull AuthorRole role) {
         var title = titleRepository.findById(titleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + titleId + " not found"));
 
@@ -168,7 +169,7 @@ public class TitleService {
 
         title.getAuthors().add(titleAuthor);
 
-        titleRepository.save(title);
+        return titleMapper.toResponse(titleRepository.save(title));
     }
 
     @Transactional
@@ -186,7 +187,7 @@ public class TitleService {
     }
 
     @Transactional
-    public void removeAuthor(UUID titleId, UUID authorId) {
+    public TitleResponse removeAuthor(UUID titleId, UUID authorId) {
         var title = titleRepository.findById(titleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + titleId + " not found"));
 
@@ -201,21 +202,21 @@ public class TitleService {
             ta.setSortOrder(sortOrder++);
         }
 
-        titleRepository.save(title);
+        return titleMapper.toResponse(titleRepository.save(title));
     }
 
     @Transactional
-    public void removePublisher(UUID titleId) {
+    public TitleResponse removePublisher(UUID titleId) {
         var title = titleRepository.findById(titleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + titleId + " not found"));
 
         title.setPublisher(null);
 
-        titleRepository.save(title);
+        return titleMapper.toResponse(titleRepository.save(title));
     }
 
     @Transactional
-    public void updateTags(UUID titleId, @Valid ReplaceTagsRequest request) {
+    public TitleResponse updateTags(UUID titleId, @Valid ReplaceTagsRequest request) {
         var title = titleRepository.findById(titleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + titleId + " not found"));
 
@@ -229,7 +230,7 @@ public class TitleService {
             title.setTags(newTags);
         }
 
-        titleRepository.save(title);
+        return titleMapper.toResponse(titleRepository.save(title));
     }
 
 }

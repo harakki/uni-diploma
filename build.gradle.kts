@@ -47,6 +47,10 @@ dependencies {
     implementation(libs.slugify)
     implementation(libs.uuid.creator)
 
+    // OpenAPI
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
+    implementation(libs.springdoc.openapi.starter.webmvc.scalar)
+
     // Bill of Materials
     implementation(platform(libs.spring.modulith.bom))
 

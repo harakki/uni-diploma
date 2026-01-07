@@ -9,6 +9,7 @@ slugify = "3.0.7"
 icu4j = "78.1"
 mockito-core = "5.+"
 testcontainers-minio = "2.0.3"
+springdoc-openapi-starter = "3.0.1"
 
 [libraries]
 # AWS SDK for S3
@@ -29,6 +30,10 @@ spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-b
 uuid-creator = { group = "com.github.f4b6a3", name = "uuid-creator", version.ref = "uuid-creator" }
 slugify = { group = "com.github.slugify", name = "slugify", version.ref = "slugify" }
 icu4j = { group = "com.ibm.icu", name = "icu4j", version.ref = "icu4j" }
+
+# OpenAPI
+springdoc-openapi-starter-webmvc-ui = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi-starter" }
+springdoc-openapi-starter-webmvc-scalar = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-scalar", version.ref = "springdoc-openapi-starter" }
 
 # Tests
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }

@@ -6,7 +6,7 @@ import dev.harakki.comics.catalog.dto.TitleResponse;
 import dev.harakki.comics.catalog.dto.TitleUpdateRequest;
 import org.mapstruct.*;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, uses = {AuthorMapper.class, PublisherMapper.class, TagMapper.class})
 public interface TitleMapper {
 
     Title toEntity(TitleCreateRequest dto);

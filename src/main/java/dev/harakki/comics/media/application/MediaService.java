@@ -4,8 +4,9 @@ import com.github.f4b6a3.uuid.UuidCreator;
 import dev.harakki.comics.media.api.MediaUrlProvider;
 import dev.harakki.comics.media.domain.Media;
 import dev.harakki.comics.media.domain.MediaStatus;
-import dev.harakki.comics.media.dto.MediaUploadUrlResponseDto;
+import dev.harakki.comics.media.dto.MediaUploadUrlResponse;
 import dev.harakki.comics.media.infrastructure.MediaRepository;
+import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +41,8 @@ public class MediaService implements MediaUrlProvider {
     private String bucket;
 
     @Transactional
-    public MediaUploadUrlResponseDto getUploadUrl(String originalFilename, String contentType, Integer width, Integer height) {
+    public MediaUploadUrlResponse getUploadUrl(String originalFilename, String contentType, Integer width,
+                                               Integer height) {
         UUID mediaId = UuidCreator.getTimeOrderedEpoch();
         // Path generation: uploads/{id}/filename.ext
         String s3Key = "uploads/" + mediaId + "/" + originalFilename;
@@ -51,8 +53,8 @@ public class MediaService implements MediaUrlProvider {
                         .bucket(bucket)
                         .key(s3Key)
                         .contentType(contentType)
-                        .build()
-                ).build();
+                        .build())
+                .build();
 
         // Save "promise" of the file (file in PENDING status)
         mediaRepository.save(Media.builder()
@@ -65,10 +67,10 @@ public class MediaService implements MediaUrlProvider {
                 .height(height)
                 .status(MediaStatus.PENDING)
                 .isNew(true)
-                .build()
-        );
+                .build());
 
-        return new MediaUploadUrlResponseDto(mediaId, s3Presigner.presignPutObject(presignRequest).url().toString(), s3Key);
+        return new MediaUploadUrlResponse(mediaId, s3Presigner.presignPutObject(presignRequest).url().toString(),
+                s3Key);
     }
 
     @Transactional(readOnly = true)
@@ -102,15 +104,18 @@ public class MediaService implements MediaUrlProvider {
 
     @Transactional
     public void deleteMediaById(UUID mediaId) {
-        mediaRepository.findById(mediaId).ifPresent(media -> {
-            deleteFromS3(media.getS3Key());
-            mediaRepository.delete(media);
-        });
+        Media media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Media with id " + mediaId + " not found"));
+
+        deleteFromS3(media.getS3Key());
+        mediaRepository.delete(media);
+        log.info("Deleted media: id={}", mediaId);
     }
 
     private void deleteFromS3(String s3Key) {
         try {
             s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(s3Key).build());
+            log.debug("Deleted from S3: key={}", s3Key);
         } catch (Exception e) {
             log.error("S3 deletion failed for key: {}", s3Key, e);
         }

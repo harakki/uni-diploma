@@ -22,8 +22,8 @@ public record TitleResponse(
         Boolean isLicensed,
         String countryIsoCode,
         UUID mainCoverMediaId,
-        List<TitleAuthor> authors,
-        Publisher publisher,
-        Set<Tag> tags
+        List<TitleAuthorResponse> authors,
+        PublisherResponse publisher,
+        Set<TagResponse> tags
 ) {
 }

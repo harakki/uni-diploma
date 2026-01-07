@@ -66,4 +66,7 @@ public class Author {
     @Column(insertable = false)
     private UUID updatedBy;
 
+    @Version
+    private Long version;
+
 }

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-public record UpdateTitleAddAuthorRequest(
+public record TitleAddAuthorRequest(
     @NotNull UUID authorId,
     @NotNull AuthorRole role
 ) {

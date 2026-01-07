@@ -101,4 +101,7 @@ public class Title {
     @Column(insertable = false)
     private UUID updatedBy;
 
+    @Version
+    private Long version;
+
 }

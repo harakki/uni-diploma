@@ -16,7 +16,7 @@ import java.util.UUID;
  * @param s3Key the S3 key of the media
  */
 @Builder
-public record MediaUploadUrlResponseDto(
+public record MediaUploadUrlResponse(
         UUID id,
         String url,
         String s3Key

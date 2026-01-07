@@ -15,7 +15,7 @@ import java.io.Serializable;
  * @param width            the width of the media
  * @param height           the height of the media
  */
-public record MediaUploadUrlRequestDto(
+public record MediaUploadUrlRequest(
         @NotBlank @Size(min=1, max=255) String originalFilename,
         @NotBlank String contentType,
         @NotNull @Positive @Max(4100) Integer width,

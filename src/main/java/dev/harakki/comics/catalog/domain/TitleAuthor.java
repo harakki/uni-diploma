@@ -39,4 +39,7 @@ public class TitleAuthor {
 
     private Integer sortOrder;
 
+    @Version
+    private Long version;
+
 }

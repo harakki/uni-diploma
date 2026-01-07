@@ -1,13 +1,12 @@
 package dev.harakki.comics.catalog.application;
 
 import dev.harakki.comics.catalog.domain.*;
-import dev.harakki.comics.catalog.dto.TitleCreateRequest;
-import dev.harakki.comics.catalog.dto.TitleResponse;
-import dev.harakki.comics.catalog.dto.TitleUpdateRequest;
+import dev.harakki.comics.catalog.dto.*;
 import dev.harakki.comics.catalog.infrastructure.*;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -173,15 +172,15 @@ public class TitleService {
     }
 
     @Transactional
-    public TitleResponse updateSlug(UUID id, String slug) {
+    public TitleResponse updateSlug(UUID id, @Valid ReplaceSlugRequest request) {
         var title = titleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + id + " not found"));
 
-        if (titleRepository.existsBySlugAndIdNot(slug, id)) {
-            throw new ResourceAlreadyExistsException("Title with slug '" + slug + "' already exists");
+        if (titleRepository.existsBySlugAndIdNot(request.slug(), id)) {
+            throw new ResourceAlreadyExistsException("Title with slug '" + request.slug() + "' already exists");
         }
 
-        title.setSlug(slug);
+        title.setSlug(request.slug());
         title = titleRepository.save(title);
         return titleMapper.toResponse(title);
     }
@@ -216,15 +215,15 @@ public class TitleService {
     }
 
     @Transactional
-    public void updateTags(UUID titleId, Set<UUID> tagIds) {
+    public void updateTags(UUID titleId, @Valid ReplaceTagsRequest request) {
         var title = titleRepository.findById(titleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + titleId + " not found"));
 
-        if (tagIds == null || tagIds.isEmpty()) {
+        if (request.tagIds() == null || request.tagIds().isEmpty()) {
             title.getTags().clear();
         } else {
-            Set<Tag> newTags = new HashSet<>(tagRepository.findAllById(tagIds));
-            if (newTags.size() != tagIds.size()) {
+            Set<Tag> newTags = new HashSet<>(tagRepository.findAllById(request.tagIds()));
+            if (newTags.size() != request.tagIds().size()) {
                 throw new ResourceNotFoundException("One or more tags not found");
             }
             title.setTags(newTags);

@@ -51,6 +51,9 @@ public class Media implements Persistable<UUID> {
     @Column(updatable = false)
     private UUID createdBy;
 
+    @Version
+    private Long version;
+
     @Transient
     @Builder.Default
     private boolean isNew = true;

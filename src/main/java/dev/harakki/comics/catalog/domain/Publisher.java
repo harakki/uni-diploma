@@ -67,4 +67,7 @@ public class Publisher {
     @Column(insertable = false)
     private UUID updatedBy;
 
+    @Version
+    private Long version;
+
 }

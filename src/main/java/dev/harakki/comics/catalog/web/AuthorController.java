@@ -1,24 +1,31 @@
 package dev.harakki.comics.catalog.web;
 
 import dev.harakki.comics.catalog.application.AuthorService;
+import dev.harakki.comics.catalog.domain.Author;
 import dev.harakki.comics.catalog.dto.AuthorCreateRequest;
 import dev.harakki.comics.catalog.dto.AuthorResponse;
 import dev.harakki.comics.catalog.dto.AuthorUpdateRequest;
 import dev.harakki.comics.shared.api.ApiProblemResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import net.kaczmarzyk.spring.data.jpa.domain.Equal;
+import net.kaczmarzyk.spring.data.jpa.domain.LikeIgnoreCase;
+import net.kaczmarzyk.spring.data.jpa.web.annotation.And;
+import net.kaczmarzyk.spring.data.jpa.web.annotation.Or;
+import net.kaczmarzyk.spring.data.jpa.web.annotation.Spec;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -71,11 +78,23 @@ class AuthorController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all authors", description = "Paginated list of authors.")
+    @Operation(summary = "Search and filter authors", description = "Retrieves authors with optional filtering.")
+    @Parameters({
+            @Parameter(name = "search", description = "Search by name or slug", example = "fujimoto"),
+            @Parameter(name = "country", description = "Filter by Country ISO Code", example = "JP")
+    })
     public Page<AuthorResponse> getAllAuthors(
+            @Or({
+                    @Spec(path = "name", params = "search", spec = LikeIgnoreCase.class),
+                    @Spec(path = "slug", params = "search", spec = LikeIgnoreCase.class)
+            }) @Parameter(hidden = true) Specification<Author> searchSpec,
+            @And({
+                    @Spec(path = "countryIsoCode", params = "country", spec = Equal.class)
+            }) @Parameter(hidden = true) Specification<Author> filterSpec,
             @ParameterObject @PageableDefault(sort = "name") Pageable pageable
     ) {
-        return authorService.getAll(pageable);
+        Specification<Author> spec = Specification.where(searchSpec).and(filterSpec);
+        return authorService.getAll(spec, pageable);
     }
 
     @DeleteMapping("/{id}")

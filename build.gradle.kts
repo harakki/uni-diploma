@@ -51,6 +51,9 @@ dependencies {
     implementation(libs.springdoc.openapi.starter.webmvc.ui)
     implementation(libs.springdoc.openapi.starter.webmvc.scalar)
 
+    // Specification API
+    implementation(libs.specification.arg.resolver)
+
     // Bill of Materials
     implementation(platform(libs.spring.modulith.bom))
 

@@ -1,5 +1,6 @@
 package dev.harakki.comics.catalog.application;
 
+import dev.harakki.comics.catalog.domain.Author;
 import dev.harakki.comics.catalog.dto.AuthorCreateRequest;
 import dev.harakki.comics.catalog.dto.AuthorResponse;
 import dev.harakki.comics.catalog.dto.AuthorUpdateRequest;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +36,7 @@ public class AuthorService {
         if (authorRepository.existsByName(request.name())) {
             throw new ResourceAlreadyExistsException("Author with name " + request.name() + " already exists");
         }
-        
+
         var author = authorMapper.toEntity(request);
 
         String slug = slugGenerator.generate(author.getName(), authorRepository::existsBySlug);
@@ -46,7 +48,7 @@ public class AuthorService {
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Author with this name or slug already exists");
         }
-        
+
         return authorMapper.toResponse(author);
     }
 
@@ -56,7 +58,7 @@ public class AuthorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
 
         author = authorMapper.partialUpdate(request, author);
-        
+
         author = authorRepository.save(author);
         log.debug("Updated author: id={}", id);
 
@@ -91,8 +93,8 @@ public class AuthorService {
     }
 
 
-    public Page<AuthorResponse> getAll(Pageable pageable) {
-        return authorRepository.findAll(pageable)
+    public Page<AuthorResponse> getAll(Specification<Author> spec, Pageable pageable) {
+        return authorRepository.findAll(spec, pageable)
                 .map(authorMapper::toResponse);
     }
 

@@ -3,6 +3,7 @@ aws-sdk = "2.40.15"
 mapstruct = "1.6.3"
 lombok-mapstruct-binding = "0.2.0"
 hibernate-jpamodelgen = "7.2.0.Final"
+specification-arg-resolver = "4.0.0"
 spring-modulith = "2.0.1"
 uuid-creator = "6.1.1"
 slugify = "3.0.7"
@@ -22,6 +23,9 @@ lombok-mapstruct-binding = { group = "org.projectlombok", name = "lombok-mapstru
 
 # Persistence
 hibernate-jpamodelgen = { group = "org.hibernate", name = "hibernate-jpamodelgen", version.ref = "hibernate-jpamodelgen" }
+
+# Specification API
+specification-arg-resolver = {group = "net.kaczmarzyk", name = "specification-arg-resolver", version.ref = "specification-arg-resolver"}
 
 # Spring Modulith BOM
 spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }

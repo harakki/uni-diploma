@@ -1,5 +1,6 @@
 package dev.harakki.comics.catalog.application;
 
+import dev.harakki.comics.catalog.domain.Publisher;
 import dev.harakki.comics.catalog.dto.PublisherCreateRequest;
 import dev.harakki.comics.catalog.dto.PublisherResponse;
 import dev.harakki.comics.catalog.dto.PublisherUpdateRequest;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,7 +48,7 @@ public class PublisherService {
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Publisher with this name or slug already exists");
         }
-        
+
         return publisherMapper.toResponse(publisher);
     }
 
@@ -95,8 +97,8 @@ public class PublisherService {
     }
 
 
-    public Page<PublisherResponse> getAll(Pageable pageable) {
-        return publisherRepository.findAll(pageable)
+    public Page<PublisherResponse> getAll(Specification<Publisher> spec, Pageable pageable) {
+        return publisherRepository.findAll(spec, pageable)
                 .map(publisherMapper::toResponse);
     }
 

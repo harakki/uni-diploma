@@ -1,5 +1,6 @@
 package dev.harakki.comics.shared.exception;
 
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -48,6 +49,14 @@ public class GlobalExceptionHandler {
                 ));
         problemDetail.setProperty("errors", errors);
 
+        return problemDetail;
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ProblemDetail handlePropertyReferenceException(PropertyReferenceException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Invalid Sorting Property");
+        problemDetail.setDetail(ex.getMessage());
         return problemDetail;
     }
 

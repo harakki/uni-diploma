@@ -2,6 +2,7 @@ package dev.harakki.comics.media.api;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public interface MediaUrlProvider {
 
@@ -12,6 +13,14 @@ public interface MediaUrlProvider {
      * @return the public URL for accessing the object
      */
     String getPublicUrl(String s3Key);
+
+    /**
+     * Get the public URL for a media object by its UUID.
+     *
+     * @param mediaId the UUID of the media object
+     * @return the public URL for accessing the media object
+     */
+    String getPublicUrl(UUID mediaId);
 
     /**
      * Get the public URLs for multiple objects in S3 by their keys.

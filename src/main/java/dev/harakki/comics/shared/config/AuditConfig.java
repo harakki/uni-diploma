@@ -15,7 +15,7 @@ class AuditConfig {
     @Bean
     public AuditorAware<UUID> auditorProvider() {
         // TODO: Setup SecurityContextHolder when auth will be ready
-        return Optional::empty;
+        return () -> Optional.of(UUID.fromString("00000000-0000-0000-0000-000000000000"));
     }
 
 }

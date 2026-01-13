@@ -108,6 +108,7 @@ public class PublisherService {
                 .orElseThrow(() -> new ResourceNotFoundException("Publisher with id " + id + " not found"));
         try {
             publisherRepository.delete(publisher);
+            publisherRepository.flush();
             log.info("Deleted publisher: id={}", id);
         } catch (DataIntegrityViolationException e) {
             throw new ResourceInUseException("Cannot delete publisher with id " + id + " because it is referenced by titles");

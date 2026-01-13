@@ -112,6 +112,7 @@ public class TagService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tag with id " + id + " not found"));
         try {
             tagRepository.delete(tag);
+            tagRepository.flush();
             log.info("Deleted tag: id={}", id);
         } catch (DataIntegrityViolationException e) {
             throw new ResourceInUseException("Cannot delete tag with id " + id + " because it is referenced by titles");

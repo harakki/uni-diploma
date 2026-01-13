@@ -141,6 +141,7 @@ public class TitleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + id + " not found"));
         try {
             titleRepository.delete(title);
+            titleRepository.flush();
             log.info("Deleted title: id={}", id);
         } catch (DataIntegrityViolationException e) {
             throw new ResourceInUseException("Cannot delete title with id " + id + " because it is referenced by other resources");

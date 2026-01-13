@@ -104,6 +104,7 @@ public class AuthorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
         try {
             authorRepository.delete(author);
+            authorRepository.flush();
             log.info("Deleted author: id={}", id);
         } catch (DataIntegrityViolationException e) {
             throw new ResourceInUseException("Cannot delete author with id " + id + " because it is referenced by titles");

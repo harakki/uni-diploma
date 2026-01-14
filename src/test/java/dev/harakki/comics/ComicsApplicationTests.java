@@ -1,10 +1,8 @@
 package dev.harakki.comics;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class ComicsApplicationTests {
+class ComicsApplicationTests extends BaseIntegrationTest {
 
     @Test
     void contextLoads() {

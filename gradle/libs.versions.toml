@@ -1,5 +1,5 @@
 [versions]
-aws-sdk = "2.40.15"
+aws-sdk = "2.41.4"
 mapstruct = "1.6.3"
 lombok-mapstruct-binding = "0.2.0"
 hibernate-jpamodelgen = "7.2.0.Final"

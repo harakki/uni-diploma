@@ -8,8 +8,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.modulith.events.ApplicationModuleListener;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
 @Slf4j
 @Component
@@ -23,25 +28,34 @@ public class MediaEventListener {
     @Value("${s3.bucket}")
     private String bucket;
 
+    @Async
+    @Transactional
     @ApplicationModuleListener
+    @Retryable(
+            retryFor = {NoSuchKeyException.class},
+            maxAttempts = 5,
+            backoff = @Backoff(delay = 1000)
+    )
     public void on(MediaFixateRequestedEvent event) {
-        mediaRepository.findById(event.mediaId()).ifPresent(media -> {
-            try {
-                var headObject = s3Client.headObject(b -> b.bucket(bucket).key(media.getS3Key()));
+        log.debug("Attempting to fixate media: {}", event.mediaId());
 
-                media.setSize(headObject.contentLength());
-                media.setContentType(headObject.contentType());
+        var media = mediaRepository.findById(event.mediaId())
+                .orElse(null);
+        if (media == null) {
+            return;
+        }
 
-                media.commit();
-                mediaRepository.save(media);
-                log.info("Media {} fixated successfully. Size: {} bytes", media.getId(), media.getSize());
-            } catch (Exception e) {
-                log.error("Failed to fixate media {}. File might not be uploaded to S3 yet.", media.getId(), e);
-                throw new ResourceNotUploadedException(e.getMessage());
-            }
-        });
+        var headObject = s3Client.headObject(b -> b.bucket(bucket).key(media.getS3Key()));
+        media.setSize(headObject.contentLength());
+        media.setContentType(headObject.contentType());
+        media.commit();
+
+        mediaRepository.save(media);
+        log.info("Media {} fixated successfully.", media.getId());
     }
 
+    @Async
+    @Transactional
     @ApplicationModuleListener
     public void on(MediaDeleteRequestedEvent event) {
         mediaRepository.findById(event.mediaId()).ifPresent(media -> {

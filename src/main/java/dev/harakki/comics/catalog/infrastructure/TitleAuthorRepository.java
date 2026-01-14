@@ -8,4 +8,7 @@ import java.util.UUID;
 
 @Repository
 public interface TitleAuthorRepository extends JpaRepository<TitleAuthor, UUID> {
+
+    int findMaxSortOrderByTitleId(UUID titleId);
+
 }

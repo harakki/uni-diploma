@@ -42,6 +42,7 @@ public class ChapterService {
         addPagesToChapter(chapter, request.pages());
 
         chapterRepository.save(chapter);
+        chapterRepository.flush();
 
         // Fixate media asynchronously
         request.pages().forEach(mediaId -> events.publishEvent(new MediaFixateRequestedEvent(mediaId)));

@@ -32,6 +32,7 @@ public class TitleService {
     private final PublisherRepository publisherRepository;
     private final TagRepository tagRepository;
     private final AuthorRepository authorRepository;
+    private final TitleAuthorRepository titleAuthorRepository;
 
     private final TitleMapper titleMapper;
     private final SlugGenerator slugGenerator;
@@ -166,7 +167,7 @@ public class TitleService {
         titleAuthor.setTitle(title);
         titleAuthor.setAuthor(author);
         titleAuthor.setRole(role);
-        titleAuthor.setSortOrder(title.getAuthors().size());
+        titleAuthor.setSortOrder((titleAuthorRepository.findMaxSortOrderByTitleId(titleId)) + 1);
 
         title.getAuthors().add(titleAuthor);
 

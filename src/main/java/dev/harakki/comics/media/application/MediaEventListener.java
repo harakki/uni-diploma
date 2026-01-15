@@ -29,7 +29,6 @@ public class MediaEventListener {
     private String bucket;
 
     @Async
-    @Transactional
     @ApplicationModuleListener
     @Retryable(
             retryFor = {NoSuchKeyException.class},
@@ -55,7 +54,6 @@ public class MediaEventListener {
     }
 
     @Async
-    @Transactional
     @ApplicationModuleListener
     public void on(MediaDeleteRequestedEvent event) {
         mediaRepository.findById(event.mediaId()).ifPresent(media -> {

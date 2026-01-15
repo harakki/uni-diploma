@@ -31,14 +31,15 @@ services:
   #   ports:
   #     - "8080:8080"
 
-  #keycloak:
-  #  image: 'quay.io/keycloak/keycloak:latest'
-  #  environment:
-  #    - 'KEYCLOAK_ADMIN=admin'
-  #    - 'KEYCLOAK_ADMIN_PASSWORD=admin'
-  #  command: start-dev
-  #  ports:
-  #    - '8080:8080'
+  keycloak:
+    image: 'quay.io/keycloak/keycloak:latest'
+    environment:
+      - 'KC_BOOTSTRAP_ADMIN_USERNAME=admin'
+      - 'KC_BOOTSTRAP_ADMIN_PASSWORD=admin'
+      - 'KC_HTTP_PORT=9080'
+    command: start-dev
+    ports:
+      - '9080:9080'
 
 volumes:
   minio_data:

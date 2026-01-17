@@ -1,6 +1,8 @@
 package dev.harakki.comics.library.application;
 
+import dev.harakki.comics.analytics.api.TitleAddToLibraryEvent;
 import dev.harakki.comics.analytics.api.TitleRatingEvent;
+import dev.harakki.comics.analytics.api.TitleRemoveFromLibraryEvent;
 import dev.harakki.comics.library.domain.LibraryEntry;
 import dev.harakki.comics.library.domain.ReadingStatus;
 import dev.harakki.comics.library.dto.LibraryEntryCreateRequest;
@@ -48,6 +50,8 @@ public class LibraryEntryService {
         try {
             entry = libraryEntryRepository.save(entry);
             libraryEntryRepository.flush();
+
+            events.publishEvent(new TitleAddToLibraryEvent(request.titleId(), currentUserId));
             log.info("Added title {} to library for user {}", request.titleId(), currentUserId);
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Title already exists in library");
@@ -104,6 +108,8 @@ public class LibraryEntryService {
         }
 
         libraryEntryRepository.delete(entry);
+
+        events.publishEvent(new TitleRemoveFromLibraryEvent(entry.getTitleId(), currentUserId));
         log.info("Removed library entry: id={} for user {}", entryId, currentUserId);
     }
 

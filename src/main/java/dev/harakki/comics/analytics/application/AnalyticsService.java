@@ -1,19 +1,24 @@
 package dev.harakki.comics.analytics.application;
 
 import dev.harakki.comics.analytics.api.ChapterReadEvent;
-import dev.harakki.comics.analytics.domain.TitleRating;
-import dev.harakki.comics.analytics.domain.TitleReadTime;
-import dev.harakki.comics.analytics.domain.TitleView;
-import dev.harakki.comics.analytics.infrastructure.TitleRatingRepository;
-import dev.harakki.comics.analytics.infrastructure.TitleReadTimeRepository;
-import dev.harakki.comics.analytics.infrastructure.TitleViewRepository;
+import dev.harakki.comics.analytics.api.TitleAddToLibraryEvent;
+import dev.harakki.comics.analytics.api.TitleRatingEvent;
+import dev.harakki.comics.analytics.api.TitleRemoveFromLibraryEvent;
+import dev.harakki.comics.analytics.domain.InteractionType;
+import dev.harakki.comics.analytics.domain.UserInteraction;
+import dev.harakki.comics.analytics.dto.UserStatsResponse;
+import dev.harakki.comics.analytics.infrastructure.UserInteractionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -21,84 +26,69 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class AnalyticsService {
 
-    private final TitleViewRepository titleViewRepository;
-    private final TitleRatingRepository titleRatingRepository;
-    private final TitleReadTimeRepository titleReadTimeRepository;
+    private final UserInteractionRepository interactionRepository;
 
     @Transactional
-    public void recordTitleView(UUID titleId, UUID userId) {
-        LocalDate today = LocalDate.now();
-
-        var existingView = titleViewRepository.findByTitleIdAndUserIdAndViewDate(titleId, userId, today);
-        if (existingView.isPresent()) {
-            log.debug("Title {} already viewed by user {} today, skipping", titleId, userId);
-            return;
-        }
-
-        TitleView view = titleViewRepository.findByTitleIdAndUserIdAndViewDate(titleId, userId, today)
-                .orElse(TitleView.builder()
-                        .titleId(titleId)
-                        .userId(userId)
-                        .viewCount(0L)
-                        .viewDate(today)
-                        .build());
-
-        view.setViewCount(view.getViewCount() + 1);
-        titleViewRepository.save(view);
-
-        log.info("Recorded title view: titleId={}, userId={}, totalViews={}", titleId, userId, view.getViewCount());
+    public void recordChapterRead(ChapterReadEvent event) {
+        var interaction = UserInteraction.builder()
+                .userId(event.userId())
+                .type(InteractionType.CHAPTER_READ)
+                .targetId(event.chapterId()) // Target -> chapterId
+                .metadata(Map.of(
+                        "titleId", event.titleId(),
+                        "readTimeMillis", event.readTimeMillis()
+                ))
+                .build();
+        interactionRepository.save(interaction);
     }
 
     @Transactional
-    public void recordTitleRating(UUID titleId, UUID userId, Integer rating) {
-        if (rating < 1 || rating > 10) {
-            log.warn("Invalid rating value: {}, expected 1-10", rating);
-            return;
-        }
-
-        var existingRating = titleRatingRepository.findByTitleIdAndUserId(titleId, userId);
-
-        TitleRating titleRating = existingRating.orElse(
-                TitleRating.builder()
-                        .titleId(titleId)
-                        .userId(userId)
-                        .build()
-        );
-
-        titleRating.setRating(rating);
-        titleRatingRepository.save(titleRating);
-
-        log.info("Recorded title rating: titleId={}, userId={}, rating={}", titleId, userId, rating);
+    public void recordTitleView(ChapterReadEvent event) {
+        var interaction = UserInteraction.builder()
+                .userId(event.userId())
+                .type(InteractionType.TITLE_VIEWED)
+                .targetId(event.titleId())
+                .build();
+        interactionRepository.save(interaction);
     }
 
     @Transactional
-    public void recordReadTime(ChapterReadEvent event) {
-        var existingReadTime = titleReadTimeRepository.findByTitleIdAndUserId(event.titleId(), event.userId());
+    public void recordTitleRating(TitleRatingEvent event) {
+        var interaction = UserInteraction.builder()
+                .userId(event.userId())
+                .type(InteractionType.TITLE_RATED)
+                .targetId(event.titleId())
+                .metadata(Map.of("rating", event.rating()))
+                .build();
+        interactionRepository.save(interaction);
+    }
 
-        TitleReadTime readTime = existingReadTime.orElse(
-                TitleReadTime.builder()
-                        .titleId(event.titleId())
-                        .userId(event.userId())
-                        .totalReadTimeMillis(0L)
-                        .build()
-        );
+    @Transactional
+    public void recordTitleAddToLibrary(TitleAddToLibraryEvent event) {
+        var interaction = UserInteraction.builder()
+                .userId(event.userId())
+                .type(InteractionType.TITLE_ADDED_TO_LIBRARY)
+                .targetId(event.titleId())
+                .build();
+        interactionRepository.save(interaction);
+    }
 
-        long newTotalTime = readTime.getTotalReadTimeMillis() + event.readTimeMillis();
-
-        readTime.setTotalReadTimeMillis(newTotalTime);
-
-        titleReadTimeRepository.save(readTime);
-
-        log.info("Recorded read time: titleId={}, userId={}, chapterReadTime={}ms",
-                event.titleId(), event.userId(), event.readTimeMillis());
+    @Transactional
+    public void recordTitleRemoveFromLibrary(TitleRemoveFromLibraryEvent event) {
+        var interaction = UserInteraction.builder()
+                .userId(event.userId())
+                .type(InteractionType.TITLE_REMOVED_FROM_LIBRARY)
+                .targetId(event.titleId())
+                .build();
+        interactionRepository.save(interaction);
     }
 
     public Double getAverageRatingForTitle(UUID titleId) {
-        return titleRatingRepository.getAverageRatingForTitle(titleId);
+        return interactionRepository.getAverageRating(titleId);
     }
 
     public Long getTotalViewCount(UUID titleId) {
-        return titleViewRepository.getTotalViewCountForTitle(titleId);
+        return interactionRepository.countByTargetIdAndType(titleId, InteractionType.TITLE_VIEWED);
     }
 
 }

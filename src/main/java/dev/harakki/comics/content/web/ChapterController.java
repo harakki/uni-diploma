@@ -72,4 +72,14 @@ public class ChapterController {
         chapterService.updatePages(chapterId, request.pages());
     }
 
+    @PostMapping("/titles/{titleId}/chapters/{chapterId}/read")
+    @Operation(summary = "Record chapter read", description = "Record that a user has read a chapter and track read time for analytics.")
+    public void recordChapterRead(
+            @PathVariable UUID titleId,
+            @PathVariable UUID chapterId,
+            @RequestBody @Valid ChapterReadRequest request
+    ) {
+        chapterService.recordChapterRead(chapterId, titleId, request);
+    }
+
 }

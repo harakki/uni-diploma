@@ -1,9 +1,9 @@
 @ApplicationModule(
         allowedDependencies = {
                 "shared",
-                "analytics :: api"
+                "catalog :: api"
         }
 )
-package dev.harakki.comics.library;
+package dev.harakki.comics.analytics;
 
 import org.springframework.modulith.ApplicationModule;

@@ -1,5 +1,6 @@
 package dev.harakki.comics.content.application;
 
+import dev.harakki.comics.analytics.api.ChapterReadEvent;
 import dev.harakki.comics.content.domain.Chapter;
 import dev.harakki.comics.content.domain.Page;
 import dev.harakki.comics.content.dto.*;
@@ -138,6 +139,23 @@ public class ChapterService {
 
         chapterRepository.save(chapter);
         log.debug("Updated chapter: id={} metadata", chapterId);
+    }
+
+    @Transactional
+    public void recordChapterRead(UUID chapterId, UUID titleId, ChapterReadRequest request) {
+        var chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chapter not found"));
+
+        var event = new ChapterReadEvent(
+                titleId,
+                request.userId(),
+                chapterId,
+                request.readTimeMillis()
+        );
+
+        events.publishEvent(event);
+        log.info("Published chapter read event: chapterId={}, titleId={}, userId={}, readTime={}ms",
+                chapterId, titleId, request.userId(), request.readTimeMillis());
     }
 
     private void addPagesToChapter(Chapter chapter, List<UUID> mediaIds) {

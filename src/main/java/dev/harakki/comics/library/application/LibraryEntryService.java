@@ -1,5 +1,6 @@
 package dev.harakki.comics.library.application;
 
+import dev.harakki.comics.analytics.api.TitleRatingEvent;
 import dev.harakki.comics.library.domain.LibraryEntry;
 import dev.harakki.comics.library.domain.ReadingStatus;
 import dev.harakki.comics.library.dto.LibraryEntryCreateRequest;
@@ -12,6 +13,7 @@ import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import dev.harakki.comics.shared.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,7 @@ public class LibraryEntryService {
 
     private final LibraryEntryRepository libraryEntryRepository;
     private final LibraryEntryMapper libraryEntryMapper;
+    private final ApplicationEventPublisher events;
 
     @Transactional
     public LibraryEntryResponse addToLibrary(LibraryEntryCreateRequest request) {
@@ -50,6 +53,13 @@ public class LibraryEntryService {
             throw new ResourceAlreadyExistsException("Title already exists in library");
         }
 
+        // If initial rating provided, publish analytics event
+        if (request.rating() != null) {
+            events.publishEvent(new TitleRatingEvent(request.titleId(), currentUserId, request.rating()));
+            log.debug("Published TitleRatingEvent for new library entry: titleId={}, userId={}, rating={}",
+                    request.titleId(), currentUserId, request.rating());
+        }
+
         return libraryEntryMapper.toResponse(entry);
     }
 
@@ -64,10 +74,21 @@ public class LibraryEntryService {
             throw new AccessDeniedException("You don't have permission to update this entry");
         }
 
+        Integer oldRating = entry.getRating();
+
         entry = libraryEntryMapper.partialUpdate(request, entry);
         entry = libraryEntryRepository.save(entry);
 
         log.debug("Updated library entry: id={}", entryId);
+
+        // If rating changed, publish analytics event
+        Integer newRating = entry.getRating();
+        if (newRating != null && !newRating.equals(oldRating)) {
+            events.publishEvent(new TitleRatingEvent(entry.getTitleId(), currentUserId, newRating));
+            log.debug("Published TitleRatingEvent for updated library entry: titleId={}, userId={}, rating={}",
+                    entry.getTitleId(), currentUserId, newRating);
+        }
+
         return libraryEntryMapper.toResponse(entry);
     }
 

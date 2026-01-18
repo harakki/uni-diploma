@@ -32,6 +32,12 @@ public class ChapterService {
 
     @Transactional
     public void create(UUID titleId, ChapterCreateRequest request) {
+        // TODO Validate that all media exist and are in PENDING status
+
+        if (request.pages().size() > 500) {
+            throw new IllegalArgumentException("Chapter cannot have more than 500 pages");
+        }
+
         var chapter = Chapter.builder()
                 .titleId(titleId)
                 .number(request.number())
@@ -84,6 +90,13 @@ public class ChapterService {
 
         Set<UUID> oldSet = new HashSet<>(oldMediaIds);
         Set<UUID> newSet = new HashSet<>(newMediaIds);
+
+        if (newMediaIds.size() > 500) {
+            throw new IllegalArgumentException("Chapter cannot have more than 500 pages");
+        }
+        if (newMediaIds.size() != newSet.size()) {
+            throw new IllegalArgumentException("Duplicate media IDs are not allowed");
+        }
 
         List<UUID> toDelete = new ArrayList<>(oldMediaIds);
         toDelete.removeIf(newSet::contains);  // Delete only old media

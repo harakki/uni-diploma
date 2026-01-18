@@ -34,7 +34,7 @@ public class AnalyticsController {
 
         return new TitleAnalyticsResponse(
                 titleId,
-                averageRating != null ? averageRating : 0.0,
+                averageRating,
                 totalViews != null ? totalViews : 0L,
                 Instant.now()
         );

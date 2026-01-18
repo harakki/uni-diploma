@@ -4,20 +4,16 @@ import dev.harakki.comics.BaseIntegrationTest;
 import dev.harakki.comics.catalog.dto.AuthorCreateRequest;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import dev.harakki.comics.BaseIntegrationTest;
 import dev.harakki.comics.catalog.domain.AuthorRole;
 import dev.harakki.comics.catalog.domain.ContentRating;
 import dev.harakki.comics.catalog.domain.TagType;
 import dev.harakki.comics.catalog.domain.TitleStatus;
 import dev.harakki.comics.catalog.domain.TitleType;
 import dev.harakki.comics.catalog.dto.*;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import tools.jackson.databind.json.JsonMapper;
@@ -108,7 +104,7 @@ class CatalogIntegrationTests extends BaseIntegrationTest {
                 TitleType.MANGA,
                 TitleStatus.ONGOING,
                 Year.of(2012),
-                ContentRating.SAFE,
+                ContentRating.SIX_PLUS,
                 "JP",
                 null,
                 Map.of(authorRes.id(), AuthorRole.STORY_AND_ART),
@@ -242,7 +238,7 @@ class CatalogIntegrationTests extends BaseIntegrationTest {
         var title = createTitle("Original Title", TitleType.MANGA, TitleStatus.ONGOING, 2020, publisher.id(), Set.of());
 
         // Update
-        var updateReq = new TitleUpdateRequest("Updated Title", "New Desc", TitleType.NOVEL, TitleStatus.COMPLETED, Year.of(2021), ContentRating.EROTICA, "KR", null, publisher.id());
+        var updateReq = new TitleUpdateRequest("Updated Title", "New Desc", TitleType.NOVEL, TitleStatus.COMPLETED, Year.of(2021), ContentRating.SIXTEEN_PLUS, "KR", null, publisher.id());
 
         mockMvc.perform(put("/api/v1/titles/" + title.id())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -347,7 +343,7 @@ class CatalogIntegrationTests extends BaseIntegrationTest {
                 type,
                 status,
                 Year.of(releaseYear),
-                ContentRating.SAFE,
+                ContentRating.SIX_PLUS,
                 "JP",
                 null,
                 null,

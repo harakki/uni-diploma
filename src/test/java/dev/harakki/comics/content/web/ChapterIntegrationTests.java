@@ -27,8 +27,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class ChapterIntegrationTests extends BaseIntegrationTest {
 
     @Autowired
@@ -41,7 +39,7 @@ class ChapterIntegrationTests extends BaseIntegrationTest {
     @BeforeEach
     void setupData() throws Exception {
         // Create Title
-        var titleReq = new TitleCreateRequest("Naruto", "Ninjas", TitleType.MANGA, TitleStatus.COMPLETED, Year.of(1999), ContentRating.SAFE, "JP", null, null, null, null);
+        var titleReq = new TitleCreateRequest("Naruto", "Ninjas", TitleType.MANGA, TitleStatus.COMPLETED, Year.of(1999), ContentRating.SIX_PLUS, "JP", null, null, null, null);
         var titleResStr = mockMvc.perform(post("/api/v1/titles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(titleReq)))

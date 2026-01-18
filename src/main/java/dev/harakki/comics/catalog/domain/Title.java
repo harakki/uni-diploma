@@ -2,6 +2,7 @@ package dev.harakki.comics.catalog.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 import org.springframework.data.annotation.CreatedBy;
@@ -62,6 +63,7 @@ public class Title {
     @Column(nullable = false)
     private Boolean isLicensed = false;
 
+    @Pattern(regexp = "^[A-Z]{2}$")
     @Column(columnDefinition = "CHAR(2)")
     private String countryIsoCode;
 

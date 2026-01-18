@@ -1,6 +1,7 @@
 package dev.harakki.comics.catalog.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
@@ -45,6 +46,7 @@ public class Author {
     @Column(columnDefinition = "TEXT[]")
     private List<String> websiteUrls = new ArrayList<>();
 
+    @Pattern(regexp = "^[A-Z]{2}$")
     @Column(columnDefinition = "CHAR(2)")
     private String countryIsoCode;
 

@@ -1,8 +1,8 @@
 package dev.harakki.comics.catalog.domain;
 
 public enum ContentRating {
-    SAFE,
-    SUGGESTIVE,
-    EROTICA,
-    PORNOGRAPHIC
+    SIX_PLUS,
+    TWELVE_PLUS,
+    SIXTEEN_PLUS,
+    EIGHTEEN_PLUS
 }

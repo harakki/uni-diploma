@@ -1,5 +1,6 @@
 package dev.harakki.comics.shared.security;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -8,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 public final class SecurityUtils {
 
     public static Optional<UUID> getCurrentUserId() {
@@ -19,8 +21,13 @@ public final class SecurityUtils {
 
         if (authentication.getPrincipal() instanceof Jwt jwt) {
             // Keycloak "sub" claim is the UUID
-            return Optional.ofNullable(jwt.getSubject())
-                    .map(UUID::fromString);
+            try {
+                return Optional.ofNullable(jwt.getSubject())
+                        .map(UUID::fromString);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid UUID in JWT subject: {}", jwt.getSubject());
+                return Optional.empty();
+            }
         }
 
         return Optional.empty();

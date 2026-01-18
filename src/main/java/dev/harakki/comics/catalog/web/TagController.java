@@ -1,6 +1,7 @@
 package dev.harakki.comics.catalog.web;
 
 import dev.harakki.comics.catalog.application.TagService;
+import dev.harakki.comics.catalog.dto.ReplaceSlugRequest;
 import dev.harakki.comics.catalog.dto.TagCreateRequest;
 import dev.harakki.comics.catalog.dto.TagResponse;
 import dev.harakki.comics.catalog.dto.TagUpdateRequest;
@@ -90,9 +91,9 @@ class TagController {
     @Operation(summary = "Update slug")
     public TagResponse updateTagSlug(
             @PathVariable @NotNull UUID id,
-            @RequestBody @NotBlank @Parameter(description = "New slug", example = "shounen") String slug
+            @RequestBody @Valid ReplaceSlugRequest request
     ) {
-        return tagService.updateSlug(id, slug);
+        return tagService.updateSlug(id, request);
     }
 
 }

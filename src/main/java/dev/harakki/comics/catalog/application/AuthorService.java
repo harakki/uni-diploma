@@ -4,11 +4,13 @@ import dev.harakki.comics.catalog.domain.Author;
 import dev.harakki.comics.catalog.dto.AuthorCreateRequest;
 import dev.harakki.comics.catalog.dto.AuthorResponse;
 import dev.harakki.comics.catalog.dto.AuthorUpdateRequest;
+import dev.harakki.comics.catalog.dto.ReplaceSlugRequest;
 import dev.harakki.comics.catalog.infrastructure.AuthorMapper;
 import dev.harakki.comics.catalog.infrastructure.AuthorRepository;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -66,15 +68,15 @@ public class AuthorService {
     }
 
     @Transactional
-    public AuthorResponse updateSlug(UUID id, String slug) {
+    public AuthorResponse updateSlug(UUID id, @Valid ReplaceSlugRequest request) {
         var author = authorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
 
-        if (authorRepository.existsBySlugAndIdNot(slug, id)) {
-            throw new ResourceAlreadyExistsException("Author with slug " + slug + " already exists");
+        if (authorRepository.existsBySlugAndIdNot(request.slug(), id)) {
+            throw new ResourceAlreadyExistsException("Author with slug " + request + " already exists");
         }
 
-        author.setSlug(slug);
+        author.setSlug(request.slug());
         author = authorRepository.save(author);
         return authorMapper.toResponse(author);
     }

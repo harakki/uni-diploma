@@ -4,11 +4,13 @@ import dev.harakki.comics.catalog.domain.Publisher;
 import dev.harakki.comics.catalog.dto.PublisherCreateRequest;
 import dev.harakki.comics.catalog.dto.PublisherResponse;
 import dev.harakki.comics.catalog.dto.PublisherUpdateRequest;
+import dev.harakki.comics.catalog.dto.ReplaceSlugRequest;
 import dev.harakki.comics.catalog.infrastructure.PublisherMapper;
 import dev.harakki.comics.catalog.infrastructure.PublisherRepository;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -70,15 +72,15 @@ public class PublisherService {
     }
 
     @Transactional
-    public PublisherResponse updateSlug(UUID id, String slug) {
+    public PublisherResponse updateSlug(UUID id, @Valid ReplaceSlugRequest request) {
         var publisher = publisherRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Publisher with id " + id + " not found"));
 
-        if (publisherRepository.existsBySlugAndIdNot(slug, id)) {
-            throw new ResourceAlreadyExistsException("Publisher with slug '" + slug + "' already exists");
+        if (publisherRepository.existsBySlugAndIdNot(request.slug(), id)) {
+            throw new ResourceAlreadyExistsException("Publisher with slug '" + request + "' already exists");
         }
 
-        publisher.setSlug(slug);
+        publisher.setSlug(request.slug());
         publisher = publisherRepository.save(publisher);
         return publisherMapper.toResponse(publisher);
     }

@@ -147,7 +147,7 @@ public class LibraryEntryService {
     }
 
     public Page<LibraryEntryResponse> getUserLibrary(UUID userId, Pageable pageable) {
-        // TODO : Add privacy checks
+        // FIXME : Add privacy checks
         return libraryEntryRepository.findByUserId(userId, pageable)
                 .map(libraryEntryMapper::toResponse);
     }

@@ -5,6 +5,7 @@ import dev.harakki.comics.catalog.domain.Publisher;
 import dev.harakki.comics.catalog.dto.PublisherCreateRequest;
 import dev.harakki.comics.catalog.dto.PublisherResponse;
 import dev.harakki.comics.catalog.dto.PublisherUpdateRequest;
+import dev.harakki.comics.catalog.dto.ReplaceSlugRequest;
 import dev.harakki.comics.shared.api.ApiProblemResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -109,9 +110,9 @@ class PublisherController {
     @Operation(summary = "Update slug")
     public PublisherResponse updatePublisherSlug(
             @PathVariable @NotNull UUID id,
-            @RequestBody @NotBlank @Parameter(description = "New slug", example = "manga-plus") String slug
+            @RequestBody @Valid ReplaceSlugRequest request
     ) {
-        return publisherService.updateSlug(id, slug);
+        return publisherService.updateSlug(id, request);
     }
 
 }

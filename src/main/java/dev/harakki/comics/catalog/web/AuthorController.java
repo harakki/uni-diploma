@@ -5,6 +5,7 @@ import dev.harakki.comics.catalog.domain.Author;
 import dev.harakki.comics.catalog.dto.AuthorCreateRequest;
 import dev.harakki.comics.catalog.dto.AuthorResponse;
 import dev.harakki.comics.catalog.dto.AuthorUpdateRequest;
+import dev.harakki.comics.catalog.dto.ReplaceSlugRequest;
 import dev.harakki.comics.shared.api.ApiProblemResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -109,9 +110,9 @@ class AuthorController {
     @Operation(summary = "Update slug", description = "Manually change the URL slug.")
     public AuthorResponse updateAuthorSlug(
             @PathVariable @NotNull UUID id,
-            @RequestBody @NotBlank @Parameter(description = "New slug", example = "fujimoto") String slug
+            @RequestBody @Valid ReplaceSlugRequest request
     ) {
-        return authorService.updateSlug(id, slug);
+        return authorService.updateSlug(id, request);
     }
 
 }

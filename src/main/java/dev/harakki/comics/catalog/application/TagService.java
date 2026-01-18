@@ -1,5 +1,6 @@
 package dev.harakki.comics.catalog.application;
 
+import dev.harakki.comics.catalog.dto.ReplaceSlugRequest;
 import dev.harakki.comics.catalog.dto.TagCreateRequest;
 import dev.harakki.comics.catalog.dto.TagResponse;
 import dev.harakki.comics.catalog.dto.TagUpdateRequest;
@@ -8,6 +9,7 @@ import dev.harakki.comics.catalog.infrastructure.TagRepository;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -76,15 +78,15 @@ public class TagService {
     }
 
     @Transactional
-    public TagResponse updateSlug(UUID id, String slug) {
+    public TagResponse updateSlug(UUID id, @Valid ReplaceSlugRequest request) {
         var tag = tagRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tag with id " + id + " not found"));
 
-        if (tagRepository.existsBySlugAndIdNot(slug, id)) {
-            throw new ResourceAlreadyExistsException("Tag with slug '" + slug + "' already exists");
+        if (tagRepository.existsBySlugAndIdNot(request.slug(), id)) {
+            throw new ResourceAlreadyExistsException("Tag with slug '" + request + "' already exists");
         }
 
-        tag.setSlug(slug);
+        tag.setSlug(request.slug());
         tag = tagRepository.save(tag);
         return tagMapper.toResponse(tag);
     }

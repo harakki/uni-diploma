@@ -3,7 +3,6 @@ package dev.harakki.comics.media.application;
 import dev.harakki.comics.media.api.MediaDeleteRequestedEvent;
 import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.media.infrastructure.MediaRepository;
-import dev.harakki.comics.shared.exception.ResourceNotUploadedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,9 +11,9 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Slf4j
 @Component
@@ -55,14 +54,16 @@ public class MediaEventListener {
 
     @Async
     @ApplicationModuleListener
+    @Retryable(
+            retryFor = {S3Exception.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000, multiplier = 2)
+    )
     public void on(MediaDeleteRequestedEvent event) {
         mediaRepository.findById(event.mediaId()).ifPresent(media -> {
-            try {
-                deleteFromS3(media.getS3Key());
-                mediaRepository.delete(media);
-            } catch (Exception e) {
-                log.error("Failed to delete media {} from S3. DB record kept for retry/manual cleanup.", media.getId(), e);
-            }
+            deleteFromS3(media.getS3Key());
+            mediaRepository.delete(media);
+            log.info("Media {} deleted successfully.", media.getId());
         });
     }
 

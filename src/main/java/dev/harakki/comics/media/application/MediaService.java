@@ -1,6 +1,7 @@
 package dev.harakki.comics.media.application;
 
 import com.github.f4b6a3.uuid.UuidCreator;
+import dev.harakki.comics.media.api.MediaDeleteRequestedEvent;
 import dev.harakki.comics.media.api.MediaUrlProvider;
 import dev.harakki.comics.media.domain.Media;
 import dev.harakki.comics.media.domain.MediaStatus;
@@ -10,10 +11,10 @@ import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -34,6 +35,8 @@ public class MediaService implements MediaUrlProvider {
     private final S3Presigner s3Presigner;
     private final S3Client s3Client;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     private static final long MEDIA_URL_EXPIRATION_MINUTES = 2 * 60L;
     private static final long UPLOAD_MEDIA_URL_EXPIRATION_MINUTES = 15L;
 
@@ -43,6 +46,10 @@ public class MediaService implements MediaUrlProvider {
     @Transactional
     public MediaUploadUrlResponse getUploadUrl(String originalFilename, String contentType, Integer width,
                                                Integer height) {
+        if (!contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Only images are allowed for chapter pages");
+        }
+
         UUID mediaId = UuidCreator.getTimeOrderedEpoch();
         // Path generation: uploads/{id}/filename.ext
         String s3Key = "uploads/" + mediaId + "/" + originalFilename;
@@ -83,7 +90,8 @@ public class MediaService implements MediaUrlProvider {
                             .getObjectRequest(b -> b.bucket(bucket).key(media.getS3Key()))
                             .build();
                     return s3Presigner.presignGetObject(request).url().toString();
-                }).orElse(null);
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Media with id " + mediaId + " not found"));
     }
 
     @Override
@@ -107,18 +115,8 @@ public class MediaService implements MediaUrlProvider {
         Media media = mediaRepository.findById(mediaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Media with id " + mediaId + " not found"));
 
-        deleteFromS3(media.getS3Key());
-        mediaRepository.delete(media);
+        eventPublisher.publishEvent(new MediaDeleteRequestedEvent(mediaId));
         log.info("Deleted media: id={}", mediaId);
-    }
-
-    private void deleteFromS3(String s3Key) {
-        try {
-            s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(s3Key).build());
-            log.debug("Deleted from S3: key={}", s3Key);
-        } catch (Exception e) {
-            log.error("S3 deletion failed for key: {}", s3Key, e);
-        }
     }
 
 }

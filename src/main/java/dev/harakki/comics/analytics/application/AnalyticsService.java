@@ -1,9 +1,6 @@
 package dev.harakki.comics.analytics.application;
 
-import dev.harakki.comics.analytics.api.ChapterReadEvent;
-import dev.harakki.comics.analytics.api.TitleAddToLibraryEvent;
-import dev.harakki.comics.analytics.api.TitleRatingEvent;
-import dev.harakki.comics.analytics.api.TitleRemoveFromLibraryEvent;
+import dev.harakki.comics.analytics.api.*;
 import dev.harakki.comics.analytics.domain.InteractionType;
 import dev.harakki.comics.analytics.domain.UserInteraction;
 import dev.harakki.comics.analytics.dto.UserStatsResponse;
@@ -78,6 +75,36 @@ public class AnalyticsService {
         var interaction = UserInteraction.builder()
                 .userId(event.userId())
                 .type(InteractionType.TITLE_REMOVED_FROM_LIBRARY)
+                .targetId(event.titleId())
+                .build();
+        interactionRepository.save(interaction);
+    }
+
+    @Transactional
+    public void recordTitleLike(TitleLikedEvent event) {
+        var interaction = UserInteraction.builder()
+                .userId(event.userId())
+                .type(InteractionType.TITLE_LIKED)
+                .targetId(event.titleId())
+                .build();
+        interactionRepository.save(interaction);
+    }
+
+    @Transactional
+    public void recordTitleDislike(TitleDislikedEvent event) {
+        var interaction = UserInteraction.builder()
+                .userId(event.userId())
+                .type(InteractionType.TITLE_DISLIKED)
+                .targetId(event.titleId())
+                .build();
+        interactionRepository.save(interaction);
+    }
+
+    @Transactional
+    public void recordTitleViewed(TitleViewedEvent event) {
+        var interaction = UserInteraction.builder()
+                .userId(event.userId())
+                .type(InteractionType.TITLE_VIEWED)
                 .targetId(event.titleId())
                 .build();
         interactionRepository.save(interaction);

@@ -1,8 +1,7 @@
 package dev.harakki.comics.library.domain;
 
+import dev.harakki.comics.library.api.VoteType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 import org.springframework.data.annotation.CreatedDate;
@@ -46,9 +45,8 @@ public class LibraryEntry {
     @Column(nullable = false)
     private ReadingStatus status;
 
-    @Min(1)
-    @Max(10)
-    private Integer rating;
+    @Enumerated(EnumType.STRING)
+    private VoteType vote;
 
     // Reading progress
     private UUID lastReadChapterId;

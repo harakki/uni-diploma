@@ -1,9 +1,6 @@
 package dev.harakki.comics.analytics.application;
 
-import dev.harakki.comics.analytics.api.ChapterReadEvent;
-import dev.harakki.comics.analytics.api.TitleAddToLibraryEvent;
-import dev.harakki.comics.analytics.api.TitleRatingEvent;
-import dev.harakki.comics.analytics.api.TitleRemoveFromLibraryEvent;
+import dev.harakki.comics.analytics.api.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
@@ -24,7 +21,6 @@ public class AnalyticsEventListener {
                 event.titleId(), event.userId(), event.chapterId(), event.readTimeMillis());
 
         try {
-            analyticsService.recordTitleView(event);
             analyticsService.recordChapterRead(event);
             log.info("Chapter read event processed successfully: titleId={}, userId{}", event.titleId(), event.userId());
         } catch (Exception e) {
@@ -34,16 +30,43 @@ public class AnalyticsEventListener {
 
     @Async
     @ApplicationModuleListener
-    public void on(TitleRatingEvent event) {
-        log.debug("Processing title rating event: titleId={}, userId={}, rating={}", event.titleId(), event.userId(), event.rating());
+    public void on(TitleLikedEvent event) {
+        log.debug("Processing title liked event: titleId={}, userId={}", event.titleId(), event.userId());
 
         try {
-            analyticsService.recordTitleRating(event);
-            log.info("Title rating event processed successfully: titleId={}, userId={}", event.titleId(), event.userId());
+            analyticsService.recordTitleLike(event);
+            log.info("Title liked event processed successfully: titleId={}, userId={}", event.titleId(), event.userId());
         } catch (Exception e) {
-            log.error("Failed to process title rating event: titleId={}, userId={}", event.titleId(), event.userId(), e);
+            log.error("Failed to process title liked event: titleId={}, userId={}", event.titleId(), event.userId(), e);
         }
     }
+
+    @Async
+    @ApplicationModuleListener
+    public void on(TitleDislikedEvent event) {
+        log.debug("Processing title disliked event: titleId={}, userId={}", event.titleId(), event.userId());
+
+        try {
+            analyticsService.recordTitleDislike(event);
+            log.info("Title disliked event processed successfully: titleId={}, userId={}", event.titleId(), event.userId());
+        } catch (Exception e) {
+            log.error("Failed to process title disliked event: titleId={}, userId={}", event.titleId(), event.userId(), e);
+        }
+    }
+
+    @Async
+    @ApplicationModuleListener
+    public void on(TitleViewedEvent event) {
+        log.debug("Processing title viewed event: titleId={}, userId={}", event.titleId(), event.userId());
+
+        try {
+            analyticsService.recordTitleView(event);
+            log.info("Title viewed event processed successfully: titleId={}, userId={}", event.titleId(), event.userId());
+        } catch (Exception e) {
+            log.error("Failed to process title viewed event: titleId={}, userId={}", event.titleId(), event.userId(), e);
+        }
+    }
+
 
     @Async
     @ApplicationModuleListener

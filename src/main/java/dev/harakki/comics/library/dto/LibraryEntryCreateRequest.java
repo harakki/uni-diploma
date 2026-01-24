@@ -1,8 +1,7 @@
 package dev.harakki.comics.library.dto;
 
 import dev.harakki.comics.library.domain.ReadingStatus;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import dev.harakki.comics.library.api.VoteType;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
@@ -14,7 +13,7 @@ import java.util.UUID;
 public record LibraryEntryCreateRequest(
         @NotNull UUID titleId,
         @NotNull ReadingStatus status,
-        @Min(1) @Max(10) Integer rating,
+        VoteType vote,
         UUID lastReadChapterId
 ) implements Serializable {
 }

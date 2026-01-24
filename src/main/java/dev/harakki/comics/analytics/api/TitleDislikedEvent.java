@@ -3,9 +3,8 @@ package dev.harakki.comics.analytics.api;
 import java.io.Serializable;
 import java.util.UUID;
 
-public record TitleRatingEvent(
+public record TitleDislikedEvent(
         UUID titleId,
-        UUID userId,
-        Integer rating
+        UUID userId
 ) implements Serializable {
 }

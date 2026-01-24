@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -29,15 +28,7 @@ public class AnalyticsController {
     @Operation(summary = "Get title analytics", description = "Retrieve analytics data for a specific title including average rating, view count, and reader count.")
     @ApiResponse(responseCode = "200", description = "Analytics data retrieved successfully")
     public TitleAnalyticsResponse getTitleAnalytics(@PathVariable UUID titleId) {
-        Double averageRating = analyticsService.getAverageRatingForTitle(titleId);
-        Long totalViews = analyticsService.getTotalViewCount(titleId);
-
-        return new TitleAnalyticsResponse(
-                titleId,
-                averageRating,
-                totalViews != null ? totalViews : 0L,
-                Instant.now()
-        );
+        return analyticsService.getTitleAnalytics(titleId);
     }
 
 }

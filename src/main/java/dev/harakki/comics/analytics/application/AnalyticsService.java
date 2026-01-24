@@ -1,24 +1,18 @@
 package dev.harakki.comics.analytics.application;
 
-import dev.harakki.comics.analytics.api.ChapterReadEvent;
-import dev.harakki.comics.analytics.api.TitleAddToLibraryEvent;
-import dev.harakki.comics.analytics.api.TitleRatingEvent;
-import dev.harakki.comics.analytics.api.TitleRemoveFromLibraryEvent;
+import dev.harakki.comics.analytics.api.*;
 import dev.harakki.comics.analytics.domain.InteractionType;
 import dev.harakki.comics.analytics.domain.UserInteraction;
-import dev.harakki.comics.analytics.dto.UserStatsResponse;
+import dev.harakki.comics.analytics.dto.TitleAnalyticsResponse;
 import dev.harakki.comics.analytics.infrastructure.UserInteractionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -43,22 +37,31 @@ public class AnalyticsService {
     }
 
     @Transactional
-    public void recordTitleView(ChapterReadEvent event) {
+    public void recordTitleLike(TitleLikedEvent event) {
         var interaction = UserInteraction.builder()
                 .userId(event.userId())
-                .type(InteractionType.TITLE_VIEWED)
+                .type(InteractionType.TITLE_LIKED)
                 .targetId(event.titleId())
                 .build();
         interactionRepository.save(interaction);
     }
 
     @Transactional
-    public void recordTitleRating(TitleRatingEvent event) {
+    public void recordTitleDislike(TitleDislikedEvent event) {
         var interaction = UserInteraction.builder()
                 .userId(event.userId())
-                .type(InteractionType.TITLE_RATED)
+                .type(InteractionType.TITLE_DISLIKED)
                 .targetId(event.titleId())
-                .metadata(Map.of("rating", event.rating()))
+                .build();
+        interactionRepository.save(interaction);
+    }
+
+    @Transactional
+    public void recordTitleView(TitleViewedEvent event) {
+        var interaction = UserInteraction.builder()
+                .userId(event.userId())
+                .type(InteractionType.TITLE_VIEWED)
+                .targetId(event.titleId())
                 .build();
         interactionRepository.save(interaction);
     }
@@ -89,6 +92,18 @@ public class AnalyticsService {
 
     public Long getTotalViewCount(UUID titleId) {
         return interactionRepository.countByTargetIdAndType(titleId, InteractionType.TITLE_VIEWED);
+    }
+
+    public TitleAnalyticsResponse getTitleAnalytics(UUID titleId) {
+        var averageRating = getAverageRatingForTitle(titleId);
+        var totalViews = getTotalViewCount(titleId);
+
+        return new TitleAnalyticsResponse(
+                titleId,
+                averageRating,
+                totalViews != null ? totalViews : 0L,
+                Instant.now()
+        );
     }
 
 }

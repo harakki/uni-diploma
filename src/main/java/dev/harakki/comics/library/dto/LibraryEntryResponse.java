@@ -1,6 +1,7 @@
 package dev.harakki.comics.library.dto;
 
 import dev.harakki.comics.library.domain.ReadingStatus;
+import dev.harakki.comics.library.api.VoteType;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -14,7 +15,7 @@ public record LibraryEntryResponse(
         UUID userId,
         UUID titleId,
         ReadingStatus status,
-        Integer rating,
+        VoteType vote,
         UUID lastReadChapterId,
         Instant createdAt,
         Instant updatedAt

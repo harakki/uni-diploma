@@ -82,4 +82,23 @@ public class ChapterController {
         chapterService.recordChapterRead(chapterId, titleId, request);
     }
 
+    @GetMapping("/titles/{titleId}/chapters/{chapterId}/read")
+    @Operation(summary = "Check if chapter is read", description = "Check if the authenticated user has read the specified chapter.")
+    public ChapterReadStatusResponse isChapterRead(
+            @PathVariable UUID titleId,
+            @PathVariable UUID chapterId,
+            @RequestParam UUID userId
+    ) {
+        return chapterService.isChapterRead(chapterId, titleId, userId);
+    }
+
+    @GetMapping("/users/{userId}/titles/{titleId}/next-chapter")
+    @Operation(summary = "Get next unread chapter", description = "Get the next unread chapter for a user in a specific title.")
+    public NextChapterResponse getNextUnreadChapter(
+            @PathVariable UUID userId,
+            @PathVariable UUID titleId
+    ) {
+        return chapterService.getNextUnreadChapter(userId, titleId);
+    }
+
 }

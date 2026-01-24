@@ -1,6 +1,7 @@
 package dev.harakki.comics.content.application;
 
 import dev.harakki.comics.analytics.api.ChapterReadEvent;
+import dev.harakki.comics.analytics.api.ChapterReadHistoryProvider;
 import dev.harakki.comics.content.domain.Chapter;
 import dev.harakki.comics.content.domain.Page;
 import dev.harakki.comics.content.dto.*;
@@ -28,6 +29,7 @@ public class ChapterService {
     private final ChapterMapper chapterMapper;
 
     private final MediaUrlProvider mediaUrlProvider;
+    private final ChapterReadHistoryProvider chapterReadHistoryProvider;
     private final ApplicationEventPublisher events;
 
     @Transactional
@@ -169,6 +171,41 @@ public class ChapterService {
         events.publishEvent(event);
         log.info("Published chapter read event: chapterId={}, titleId={}, userId={}, readTime={}ms",
                 chapterId, titleId, request.userId(), request.readTimeMillis());
+    }
+
+    public ChapterReadStatusResponse isChapterRead(UUID chapterId, UUID titleId, UUID userId) {
+        if (!chapterRepository.existsById(chapterId)) {
+            throw new ResourceNotFoundException("Chapter not found");
+        }
+
+        boolean isRead = chapterReadHistoryProvider.isChapterRead(userId, chapterId);
+        return new ChapterReadStatusResponse(chapterId, isRead);
+    }
+
+    public NextChapterResponse getNextUnreadChapter(UUID userId, UUID titleId) {
+        List<Chapter> chapters = chapterRepository.findAllByTitleId(titleId);
+
+        if (chapters.isEmpty()) {
+            return NextChapterResponse.noChapter();
+        }
+
+        List<UUID> chapterIds = chapters.stream().map(Chapter::getId).toList();
+        Set<UUID> readChapterIds = chapterReadHistoryProvider.getReadChapterIds(userId, chapterIds);
+
+        // Find first unread chapter
+        for (var chapter : chapters) {
+            if (!readChapterIds.contains(chapter.getId())) {
+                return new NextChapterResponse(
+                        chapter.getId(),
+                        chapter.getDisplayNumber(),
+                        chapter.getName(),
+                        true
+                );
+            }
+        }
+
+        // All chapters are read
+        return NextChapterResponse.noChapter();
     }
 
     private void addPagesToChapter(Chapter chapter, List<UUID> mediaIds) {

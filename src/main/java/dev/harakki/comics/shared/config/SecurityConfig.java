@@ -2,6 +2,7 @@ package dev.harakki.comics.shared.config;
 
 import dev.harakki.comics.shared.security.KeycloakJwtAuthenticationConverter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,6 +17,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity // Enable @PreAuthorize("hasRole('ADMIN')"), @PostAuthorize, etc.
@@ -23,6 +27,9 @@ import org.springframework.web.filter.CorsFilter;
 class SecurityConfig {
 
     private final KeycloakJwtAuthenticationConverter keycloakConverter;
+
+    @Value("${app.cors.allowed-origins:*}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -59,7 +66,14 @@ class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*"); // TODO FOR DEV ONLY, restrict in production
+        if ("*".equals(allowedOrigins)) {
+            config.addAllowedOriginPattern("*");
+        } else {
+            List<String> origins = Stream.of(allowedOrigins.split(","))
+                    .map(String::trim)
+                    .toList();
+            config.setAllowedOrigins(origins);
+        }
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

@@ -1,5 +1,8 @@
 package dev.harakki.comics.catalog.application;
 
+import dev.harakki.comics.catalog.api.TitleCreatedEvent;
+import dev.harakki.comics.catalog.api.TitleDeletedEvent;
+import dev.harakki.comics.catalog.api.TitleUpdatedEvent;
 import dev.harakki.comics.catalog.domain.*;
 import dev.harakki.comics.catalog.dto.*;
 import dev.harakki.comics.catalog.infrastructure.*;
@@ -10,6 +13,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +40,8 @@ public class TitleService {
 
     private final TitleMapper titleMapper;
     private final SlugGenerator slugGenerator;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public TitleResponse create(TitleCreateRequest request) {
@@ -92,6 +98,12 @@ public class TitleService {
         try {
             title = titleRepository.save(title);
             log.info("Created title: id={}, name={}", title.getId(), title.getName());
+
+            eventPublisher.publishEvent(new TitleCreatedEvent(
+                    title.getId(),
+                    title.getName(),
+                    title.getSlug()
+            ));
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Title with this slug already exists");
         }
@@ -115,6 +127,11 @@ public class TitleService {
 
         title = titleRepository.save(title);
         log.debug("Updated title: id={}", id);
+
+        eventPublisher.publishEvent(new TitleUpdatedEvent(
+                title.getId(),
+                title.getName()
+        ));
 
         return titleMapper.toResponse(title);
     }
@@ -144,6 +161,8 @@ public class TitleService {
             titleRepository.delete(title);
             titleRepository.flush();
             log.info("Deleted title: id={}", id);
+
+            eventPublisher.publishEvent(new TitleDeletedEvent(id));
         } catch (DataIntegrityViolationException e) {
             throw new ResourceInUseException("Cannot delete title with id " + id + " because it is referenced by other resources");
         }
@@ -171,6 +190,11 @@ public class TitleService {
 
         title.getAuthors().add(titleAuthor);
 
+        eventPublisher.publishEvent(new TitleUpdatedEvent(
+                title.getId(),
+                title.getName()
+        ));
+
         return titleMapper.toResponse(titleRepository.save(title));
     }
 
@@ -185,6 +209,12 @@ public class TitleService {
 
         title.setSlug(request.slug());
         title = titleRepository.save(title);
+
+        eventPublisher.publishEvent(new TitleUpdatedEvent(
+                title.getId(),
+                title.getName()
+        ));
+
         return titleMapper.toResponse(title);
     }
 
@@ -204,6 +234,11 @@ public class TitleService {
             ta.setSortOrder(sortOrder++);
         }
 
+        eventPublisher.publishEvent(new TitleUpdatedEvent(
+                title.getId(),
+                title.getName()
+        ));
+
         return titleMapper.toResponse(titleRepository.save(title));
     }
 
@@ -213,6 +248,11 @@ public class TitleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + titleId + " not found"));
 
         title.setPublisher(null);
+
+        eventPublisher.publishEvent(new TitleUpdatedEvent(
+                title.getId(),
+                title.getName()
+        ));
 
         return titleMapper.toResponse(titleRepository.save(title));
     }
@@ -231,6 +271,11 @@ public class TitleService {
             }
             title.setTags(newTags);
         }
+
+        eventPublisher.publishEvent(new TitleUpdatedEvent(
+                title.getId(),
+                title.getName()
+        ));
 
         return titleMapper.toResponse(titleRepository.save(title));
     }

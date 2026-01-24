@@ -68,7 +68,10 @@ class SecurityConfig {
         
         // Use environment-specific origins instead of allowing all
         // Default to common development origins if not specified
-        List<String> origins = List.of(allowedOrigins.split(","));
+        List<String> origins = List.of(allowedOrigins.split(","))
+                .stream()
+                .map(String::trim)
+                .toList();
         config.setAllowedOrigins(origins);
         
         config.addAllowedHeader("*");

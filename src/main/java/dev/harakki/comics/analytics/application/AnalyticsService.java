@@ -41,12 +41,7 @@ public class AnalyticsService {
 
     @Transactional
     public void recordTitleView(ChapterReadEvent event) {
-        var interaction = UserInteraction.builder()
-                .userId(event.userId())
-                .type(InteractionType.TITLE_VIEWED)
-                .targetId(event.titleId())
-                .build();
-        interactionRepository.save(interaction);
+        recordTitleViewedInternal(event.userId(), event.titleId());
     }
 
     @Transactional
@@ -102,10 +97,14 @@ public class AnalyticsService {
 
     @Transactional
     public void recordTitleViewed(TitleViewedEvent event) {
+        recordTitleViewedInternal(event.userId(), event.titleId());
+    }
+
+    private void recordTitleViewedInternal(UUID userId, UUID titleId) {
         var interaction = UserInteraction.builder()
-                .userId(event.userId())
+                .userId(userId)
                 .type(InteractionType.TITLE_VIEWED)
-                .targetId(event.titleId())
+                .targetId(titleId)
                 .build();
         interactionRepository.save(interaction);
     }

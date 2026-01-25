@@ -101,12 +101,6 @@ public class UserCollectionController {
         return collectionService.addTitles(id, titleIds);
     }
 
-    @PostMapping("/{id}/titles")
-    @Operation(summary = "Add title to collection", description = "Add a single title to user's collection at the end")
-    public UserCollectionResponse addTitle(@PathVariable UUID id, @RequestBody UUID titleId) {
-        return collectionService.addTitle(id, titleId);
-    }
-
     @DeleteMapping("/{id}/titles/{titleId}")
     @Operation(summary = "Remove title from collection", description = "Remove a single title from collection")
     public UserCollectionResponse removeTitle(@PathVariable UUID id, @PathVariable UUID titleId) {

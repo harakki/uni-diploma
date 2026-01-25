@@ -27,17 +27,19 @@ repositories {
 
 dependencies {
     // Spring Boot Starters
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    //implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-batch")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.boot:spring-boot-starter-webmvc")
 
     // Spring Modulith
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("org.springframework.modulith:spring-modulith-starter-jpa")
+    runtimeOnly("org.springframework.modulith:spring-modulith-actuator")
+    runtimeOnly("org.springframework.modulith:spring-modulith-observability")
 
     // Amazon AWS S3
     implementation(libs.awssdk.s3)
@@ -73,19 +75,21 @@ dependencies {
     annotationProcessor(libs.mapstruct.processor)
 
     // Tests
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.springframework.batch:spring-batch-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-batch-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
+    //testImplementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-security-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
-    testImplementation("org.springframework.modulith:spring-modulith-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.springframework.modulith:spring-modulith-starter-test")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-postgresql")
     testImplementation(libs.mockito.core)
     testImplementation(libs.testcontainers.minio)
-    runtimeOnly("org.springframework.modulith:spring-modulith-actuator")
-    runtimeOnly("org.springframework.modulith:spring-modulith-observability")
-
+    testImplementation(libs.testcontainers.keycloak)
+    
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

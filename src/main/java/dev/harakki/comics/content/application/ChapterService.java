@@ -16,29 +16,34 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
-@Service
+@Validated
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Service
 public class ChapterService {
+
+    private static final int MAX_PAGES_PER_CHAPTER = 500;
 
     private final ChapterRepository chapterRepository;
     private final ChapterMapper chapterMapper;
 
     private final MediaUrlProvider mediaUrlProvider;
     private final ChapterReadHistoryProvider chapterReadHistoryProvider;
-    private final ApplicationEventPublisher events;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void create(UUID titleId, ChapterCreateRequest request) {
-        // TODO Validate that all media exist and are in PENDING status
-
-        if (request.pages().size() > 500) {
-            throw new IllegalArgumentException("Chapter cannot have more than 500 pages");
-        }
+        validatePages(request.pages());
 
         var chapter = Chapter.builder()
                 .titleId(titleId)
@@ -51,10 +56,8 @@ public class ChapterService {
         addPagesToChapter(chapter, request.pages());
 
         chapterRepository.save(chapter);
-        chapterRepository.flush();
 
-        // Fixate media asynchronously
-        request.pages().forEach(mediaId -> events.publishEvent(new MediaFixateRequestedEvent(mediaId)));
+        request.pages().forEach(mediaId -> eventPublisher.publishEvent(new MediaFixateRequestedEvent(mediaId)));
 
         log.info("Created chapter: titleId={}, number={}.{}", titleId, request.number(), request.subNumber());
     }
@@ -83,38 +86,30 @@ public class ChapterService {
 
     @Transactional
     public void updatePages(UUID chapterId, List<UUID> newMediaIds) {
+        validatePages(newMediaIds);
+
         var chapter = chapterRepository.findByIdWithPages(chapterId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chapter not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Chapter with id " + chapterId + " not found"));
 
-        List<UUID> oldMediaIds = chapter.getPages().stream()
+        Set<UUID> newMediaIdsSet = new HashSet<>(newMediaIds);
+        Set<UUID> oldMediaIdsSet = chapter.getPages().stream()
                 .map(Page::getMediaId)
-                .toList();
-
-        Set<UUID> oldSet = new HashSet<>(oldMediaIds);
-        Set<UUID> newSet = new HashSet<>(newMediaIds);
-
-        if (newMediaIds.size() > 500) {
-            throw new IllegalArgumentException("Chapter cannot have more than 500 pages");
-        }
-        if (newMediaIds.size() != newSet.size()) {
-            throw new IllegalArgumentException("Duplicate media IDs are not allowed");
-        }
-
-        List<UUID> toDelete = new ArrayList<>(oldMediaIds);
-        toDelete.removeIf(newSet::contains);  // Delete only old media
-
-        List<UUID> toFixate = new ArrayList<>(newMediaIds);
-        toFixate.removeIf(oldSet::contains); // Fixate only new media
+                .collect(Collectors.toSet());
 
         chapter.getPages().clear();
         addPagesToChapter(chapter, newMediaIds);
+
         chapterRepository.save(chapter);
 
-        // Asynchronously request media fixate and delete
-        toFixate.forEach(id -> events.publishEvent(new MediaFixateRequestedEvent(id)));
-        toDelete.forEach(id -> events.publishEvent(new MediaDeleteRequestedEvent(id)));
+        newMediaIds.stream()
+                .filter(id -> !oldMediaIdsSet.contains(id))
+                .forEach(id -> eventPublisher.publishEvent(new MediaFixateRequestedEvent(id)));
 
-        log.info("Updated pages: {} added, {} removed", toFixate.size(), toDelete.size());
+        oldMediaIdsSet.stream()
+                .filter(id -> !newMediaIdsSet.contains(id))
+                .forEach(id -> eventPublisher.publishEvent(new MediaDeleteRequestedEvent(id)));
+
+        log.info("Updated pages for chapter {}: {} total", chapterId, newMediaIds.size());
     }
 
     @Transactional
@@ -127,9 +122,10 @@ public class ChapterService {
                 .toList();
 
         chapterRepository.delete(chapter);
+        chapterRepository.flush();
 
         // Asynchronously request media deletion
-        mediaIdsToDelete.forEach(id -> events.publishEvent(new MediaDeleteRequestedEvent(id)));
+        mediaIdsToDelete.forEach(id -> eventPublisher.publishEvent(new MediaDeleteRequestedEvent(id)));
 
         log.info("Deleted chapter {} and requested deletion of {} pages", chapterId, mediaIdsToDelete.size());
     }
@@ -158,8 +154,9 @@ public class ChapterService {
 
     @Transactional
     public void recordChapterRead(UUID chapterId, UUID titleId, ChapterReadRequest request) {
-        var chapter = chapterRepository.findById(chapterId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chapter not found"));
+        if (!chapterRepository.existsById(chapterId)) {
+            throw new ResourceNotFoundException("Chapter with id " + chapterId + " not found");
+        }
 
         var event = new ChapterReadEvent(
                 titleId,
@@ -168,9 +165,8 @@ public class ChapterService {
                 request.readTimeMillis()
         );
 
-        events.publishEvent(event);
-        log.info("Published chapter read event: chapterId={}, titleId={}, userId={}, readTime={}ms",
-                chapterId, titleId, request.userId(), request.readTimeMillis());
+        eventPublisher.publishEvent(event);
+        log.info("Published chapter read event: chapterId={}, userId={}", chapterId, request.userId());
     }
 
     public ChapterReadStatusResponse isChapterRead(UUID chapterId, UUID titleId, UUID userId) {
@@ -192,20 +188,23 @@ public class ChapterService {
         List<UUID> chapterIds = chapters.stream().map(Chapter::getId).toList();
         Set<UUID> readChapterIds = chapterReadHistoryProvider.getReadChapterIds(userId, chapterIds);
 
-        // Find first unread chapter
-        for (var chapter : chapters) {
-            if (!readChapterIds.contains(chapter.getId())) {
-                return new NextChapterResponse(
-                        chapter.getId(),
-                        chapter.getDisplayNumber(),
-                        chapter.getName(),
-                        true
-                );
-            }
-        }
+        return chapters.stream()
+                .filter(c -> !readChapterIds.contains(c.getId()))
+                .findFirst()
+                .map(c -> new NextChapterResponse(c.getId(), c.getDisplayNumber(), c.getName(), true))
+                .orElse(NextChapterResponse.noChapter());
+    }
 
-        // All chapters are read
-        return NextChapterResponse.noChapter();
+    private void validatePages(List<UUID> pages) {
+        if (pages == null) {
+            return;
+        }
+        if (pages.size() > MAX_PAGES_PER_CHAPTER) {
+            throw new IllegalArgumentException("Chapter cannot have more than " + MAX_PAGES_PER_CHAPTER + " pages");
+        }
+        if (new HashSet<>(pages).size() != pages.size()) {
+            throw new IllegalArgumentException("Duplicate media IDs are not allowed in pages list");
+        }
     }
 
     private void addPagesToChapter(Chapter chapter, List<UUID> mediaIds) {

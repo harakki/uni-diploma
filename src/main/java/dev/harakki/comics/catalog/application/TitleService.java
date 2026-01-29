@@ -1,11 +1,10 @@
 package dev.harakki.comics.catalog.application;
 
-import dev.harakki.comics.catalog.api.TitleCreatedEvent;
-import dev.harakki.comics.catalog.api.TitleDeletedEvent;
-import dev.harakki.comics.catalog.api.TitleUpdatedEvent;
 import dev.harakki.comics.catalog.domain.*;
 import dev.harakki.comics.catalog.dto.*;
 import dev.harakki.comics.catalog.infrastructure.*;
+import dev.harakki.comics.media.api.MediaDeleteRequestedEvent;
+import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
@@ -20,13 +19,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
+@Validated
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
@@ -95,15 +93,14 @@ public class TitleService {
             title.setTags(tags);
         }
 
+        // Media Fixation
+        if (request.mainCoverMediaId() != null) {
+            eventPublisher.publishEvent(new MediaFixateRequestedEvent(request.mainCoverMediaId()));
+        }
+
         try {
             title = titleRepository.save(title);
             log.info("Created title: id={}, name={}", title.getId(), title.getName());
-
-            eventPublisher.publishEvent(new TitleCreatedEvent(
-                    title.getId(),
-                    title.getName(),
-                    title.getSlug()
-            ));
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Title with this slug already exists");
         }
@@ -116,7 +113,9 @@ public class TitleService {
         var title = titleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + id + " not found"));
 
-        titleMapper.partialUpdate(request, title);
+        var oldMediaId = title.getMainCoverMediaId();
+
+        title = titleMapper.partialUpdate(request, title);
 
         // Connection with Publisher
         if (request.publisherId() != null) {
@@ -125,14 +124,19 @@ public class TitleService {
             title.setPublisher(publisher);
         }
 
+        var newMediaId = title.getMainCoverMediaId();
+
+        if (!Objects.equals(oldMediaId, newMediaId)) {
+            if (newMediaId != null) {
+                eventPublisher.publishEvent(new MediaFixateRequestedEvent(newMediaId));
+            }
+            if (oldMediaId != null) {
+                eventPublisher.publishEvent(new MediaDeleteRequestedEvent(oldMediaId));
+            }
+        }
+
         title = titleRepository.save(title);
         log.debug("Updated title: id={}", id);
-
-        eventPublisher.publishEvent(new TitleUpdatedEvent(
-                title.getId(),
-                title.getName()
-        ));
-
         return titleMapper.toResponse(title);
     }
 
@@ -160,9 +164,12 @@ public class TitleService {
         try {
             titleRepository.delete(title);
             titleRepository.flush();
-            log.info("Deleted title: id={}", id);
 
-            eventPublisher.publishEvent(new TitleDeletedEvent(id));
+            if (title.getMainCoverMediaId() != null) {
+                eventPublisher.publishEvent(new MediaDeleteRequestedEvent(title.getMainCoverMediaId()));
+            }
+
+            log.info("Deleted title: id={}", id);
         } catch (DataIntegrityViolationException e) {
             throw new ResourceInUseException("Cannot delete title with id " + id + " because it is referenced by other resources");
         }
@@ -182,18 +189,18 @@ public class TitleService {
         var author = authorRepository.findById(authorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Author with id " + authorId + " not found"));
 
+        int nextSortOrder = title.getAuthors().stream()
+                .mapToInt(TitleAuthor::getSortOrder)
+                .max()
+                .orElse(-1) + 1;
+
         var titleAuthor = new TitleAuthor();
         titleAuthor.setTitle(title);
         titleAuthor.setAuthor(author);
         titleAuthor.setRole(role);
-        titleAuthor.setSortOrder((titleAuthorRepository.findMaxSortOrderByTitleId(titleId)) + 1);
+        titleAuthor.setSortOrder(nextSortOrder);
 
         title.getAuthors().add(titleAuthor);
-
-        eventPublisher.publishEvent(new TitleUpdatedEvent(
-                title.getId(),
-                title.getName()
-        ));
 
         return titleMapper.toResponse(titleRepository.save(title));
     }
@@ -210,11 +217,6 @@ public class TitleService {
         title.setSlug(request.slug());
         title = titleRepository.save(title);
 
-        eventPublisher.publishEvent(new TitleUpdatedEvent(
-                title.getId(),
-                title.getName()
-        ));
-
         return titleMapper.toResponse(title);
     }
 
@@ -228,16 +230,11 @@ public class TitleService {
             throw new ResourceNotFoundException("Author link not found for title " + titleId);
         }
 
-        // Normalize sort order to keep authors ordered without gaps
+        // Normalize sort order
         int sortOrder = 0;
         for (var ta : title.getAuthors()) {
             ta.setSortOrder(sortOrder++);
         }
-
-        eventPublisher.publishEvent(new TitleUpdatedEvent(
-                title.getId(),
-                title.getName()
-        ));
 
         return titleMapper.toResponse(titleRepository.save(title));
     }
@@ -248,11 +245,6 @@ public class TitleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + titleId + " not found"));
 
         title.setPublisher(null);
-
-        eventPublisher.publishEvent(new TitleUpdatedEvent(
-                title.getId(),
-                title.getName()
-        ));
 
         return titleMapper.toResponse(titleRepository.save(title));
     }
@@ -271,11 +263,6 @@ public class TitleService {
             }
             title.setTags(newTags);
         }
-
-        eventPublisher.publishEvent(new TitleUpdatedEvent(
-                title.getId(),
-                title.getName()
-        ));
 
         return titleMapper.toResponse(titleRepository.save(title));
     }

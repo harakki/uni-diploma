@@ -7,22 +7,28 @@ import dev.harakki.comics.catalog.dto.AuthorUpdateRequest;
 import dev.harakki.comics.catalog.dto.ReplaceSlugRequest;
 import dev.harakki.comics.catalog.infrastructure.AuthorMapper;
 import dev.harakki.comics.catalog.infrastructure.AuthorRepository;
+import dev.harakki.comics.media.api.MediaDeleteRequestedEvent;
+import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
+@Validated
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
@@ -33,6 +39,8 @@ public class AuthorService {
 
     private final SlugGenerator slugGenerator;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     @Transactional
     public AuthorResponse create(AuthorCreateRequest request) {
         if (authorRepository.existsByName(request.name())) {
@@ -41,8 +49,13 @@ public class AuthorService {
 
         var author = authorMapper.toEntity(request);
 
+        // Generate and set unique slug
         String slug = slugGenerator.generate(author.getName(), authorRepository::existsBySlug);
         author.setSlug(slug);
+
+        if (request.mainCoverMediaId() != null) {
+            eventPublisher.publishEvent(new MediaFixateRequestedEvent(request.mainCoverMediaId()));
+        }
 
         try {
             author = authorRepository.save(author);
@@ -59,7 +72,19 @@ public class AuthorService {
         var author = authorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
 
+        var oldMediaId = author.getMainCoverMediaId();
+
         author = authorMapper.partialUpdate(request, author);
+        var newMediaId = author.getMainCoverMediaId();
+
+        if (!Objects.equals(oldMediaId, newMediaId)) {
+            if (newMediaId != null) {
+                eventPublisher.publishEvent(new MediaFixateRequestedEvent(newMediaId));
+            }
+            if (oldMediaId != null) {
+                eventPublisher.publishEvent(new MediaDeleteRequestedEvent(oldMediaId));
+            }
+        }
 
         author = authorRepository.save(author);
         log.debug("Updated author: id={}", id);
@@ -73,7 +98,7 @@ public class AuthorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
 
         if (authorRepository.existsBySlugAndIdNot(request.slug(), id)) {
-            throw new ResourceAlreadyExistsException("Author with slug " + request + " already exists");
+            throw new ResourceAlreadyExistsException("Author with slug " + request.slug() + " already exists");
         }
 
         author.setSlug(request.slug());
@@ -107,6 +132,11 @@ public class AuthorService {
         try {
             authorRepository.delete(author);
             authorRepository.flush();
+
+            if (author.getMainCoverMediaId() != null) {
+                eventPublisher.publishEvent(new MediaDeleteRequestedEvent(author.getMainCoverMediaId()));
+            }
+
             log.info("Deleted author: id={}", id);
         } catch (DataIntegrityViolationException e) {
             throw new ResourceInUseException("Cannot delete author with id " + id + " because it is referenced by titles");

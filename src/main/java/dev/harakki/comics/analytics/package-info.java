@@ -1,7 +1,6 @@
 @ApplicationModule(
         allowedDependencies = {
                 "shared",
-                "catalog :: api",
                 "library :: api"
         }
 )

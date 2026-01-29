@@ -1,16 +1,13 @@
 package dev.harakki.comics.shared.utils;
 
-import org.hibernate.validator.constraints.UUID;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Component
-public class SecurityUtils {
+public final class SecurityUtils {
 
     public static Optional<Jwt> getCurrentJwt() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -7,11 +7,13 @@ import dev.harakki.comics.collections.infrastructure.CollectionMapper;
 import dev.harakki.comics.collections.infrastructure.CollectionRepository;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import dev.harakki.comics.shared.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +61,7 @@ public class CollectionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getIsPublic() && !entity.getAuthorId().equals(currentUserId)) {
-            //throw new AccessDeniedException("Collection is private");
+            throw new AccessDeniedException("Collection is private");
         }
 
         return mapper.toResponse(entity);
@@ -89,7 +91,7 @@ public class CollectionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getAuthorId().equals(currentUserId)) {
-            //throw new AccessDeniedException("You don't have permission to update this collection");
+            throw new AccessDeniedException("You don't have permission to update this collection");
         }
 
         // Check if new name already exists (and it's different from current)
@@ -115,7 +117,7 @@ public class CollectionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getAuthorId().equals(currentUserId)) {
-            //throw new AccessDeniedException("You don't have permission to delete this collection");
+            throw new AccessDeniedException("You don't have permission to delete this collection");
         }
 
         repository.delete(entity);
@@ -130,7 +132,7 @@ public class CollectionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getAuthorId().equals(currentUserId)) {
-            //throw new AccessDeniedException("You don't have permission to share this collection");
+            throw new AccessDeniedException("You don't have permission to share this collection");
         }
 
         // Generate a unique token
@@ -156,7 +158,7 @@ public class CollectionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getAuthorId().equals(currentUserId)) {
-            //throw new AccessDeniedException("You don't have permission to revoke share link");
+            throw new AccessDeniedException("You don't have permission to revoke share link");
         }
 
         entity.setShareToken(null);
@@ -182,9 +184,7 @@ public class CollectionService {
     }
 
     private UUID getCurrentUserId() {
-        //return SecurityUtils.getCurrentUserId()
-        //        .orElseThrow(() -> new AccessDeniedException("User is not authenticated"));
-        return UUID.fromString("00000000-0000-0000-0000-000000000001");
+        return UUID.fromString(SecurityUtils.getCurrentUserId());
     }
 
     private String generateUniqueToken() {

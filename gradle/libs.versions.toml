@@ -10,6 +10,7 @@ slugify = "3.0.7"
 icu4j = "78.1"
 mockito-core = "5.+"
 testcontainers-minio = "2.0.3"
+testcontainers-keycloak = "4.1.1"
 springdoc-openapi-starter = "3.0.1"
 
 [libraries]
@@ -42,3 +43,4 @@ springdoc-openapi-starter-webmvc-scalar = { group = "org.springdoc", name = "spr
 # Tests
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }
 testcontainers-minio = { group = "org.testcontainers", name = "testcontainers-minio", version.ref = "testcontainers-minio" }
+testcontainers-keycloak = { group = "com.github.dasniko", name = "testcontainers-keycloak", version.ref = "testcontainers-keycloak" }

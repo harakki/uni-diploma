@@ -12,6 +12,7 @@ import dev.harakki.comics.library.infrastructure.LibraryEntryMapper;
 import dev.harakki.comics.library.infrastructure.LibraryEntryRepository;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import dev.harakki.comics.shared.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,7 +20,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-//import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,7 +75,7 @@ public class LibraryEntryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Library entry not found"));
 
         if (!entry.getUserId().equals(currentUserId)) {
-            //throw new AccessDeniedException("You don't have permission to update this entry");
+            throw new AccessDeniedException("You don't have permission to update this entry");
         }
 
         var oldVote = entry.getVote();
@@ -102,7 +103,7 @@ public class LibraryEntryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Library entry not found"));
 
         if (!entry.getUserId().equals(currentUserId)) {
-            //throw new AccessDeniedException("You don't have permission to delete this entry");
+            throw new AccessDeniedException("You don't have permission to delete this entry");
         }
 
         libraryEntryRepository.delete(entry);
@@ -118,7 +119,7 @@ public class LibraryEntryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Library entry not found"));
 
         if (!entry.getUserId().equals(currentUserId)) {
-            //throw new AccessDeniedException("You don't have permission to view this entry");
+            throw new AccessDeniedException("You don't have permission to view this entry");
         }
 
         return libraryEntryMapper.toResponse(entry);
@@ -164,9 +165,7 @@ public class LibraryEntryService {
     }
 
     private UUID getCurrentUserId() {
-        //return SecurityUtils.getCurrentUserId()
-        //        .orElseThrow(() -> new AccessDeniedException("User is not authenticated"));
-        return UUID.fromString("00000000-0000-0000-0000-000000000000");
+        return UUID.fromString(SecurityUtils.getCurrentUserId());
     }
 
 }

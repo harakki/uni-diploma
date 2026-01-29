@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,15 +35,15 @@ public class GlobalExceptionHandler {
     }
 
     // Access denied -> AccessDeniedException -> 403 Forbidden
-//    @ExceptionHandler(AccessDeniedException.class)
-//    public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
-//        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-//                HttpStatus.FORBIDDEN,
-//                ex.getMessage()
-//        );
-//        problemDetail.setTitle("Access Denied");
-//        return problemDetail;
-//    }
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage()
+        );
+        problemDetail.setTitle("Access Denied");
+        return problemDetail;
+    }
 
     // Resource not uploaded -> ResourceNotUploadedException -> 400 Bad Request
     @ExceptionHandler(ResourceNotUploadedException.class)

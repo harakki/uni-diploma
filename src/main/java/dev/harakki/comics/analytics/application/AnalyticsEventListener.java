@@ -4,6 +4,8 @@ import dev.harakki.comics.analytics.api.*;
 import dev.harakki.comics.catalog.api.*;
 import dev.harakki.comics.collections.api.*;
 import dev.harakki.comics.content.api.*;
+import dev.harakki.comics.library.api.LibraryAddTitleEvent;
+import dev.harakki.comics.library.api.LibraryRemoveTitleEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
@@ -73,7 +75,7 @@ public class AnalyticsEventListener {
 
     @Async
     @ApplicationModuleListener
-    public void on(TitleAddToLibraryEvent event) {
+    public void on(LibraryAddTitleEvent event) {
         log.debug("Processing title add to library event: titleId={}, userId={}", event.titleId(), event.userId());
 
         try {
@@ -86,7 +88,7 @@ public class AnalyticsEventListener {
 
     @Async
     @ApplicationModuleListener
-    public void on(TitleRemoveFromLibraryEvent event) {
+    public void on(LibraryRemoveTitleEvent event) {
         log.debug("Processing title remove from library event: titleId={}, userId={}", event.titleId(), event.userId());
 
         try {

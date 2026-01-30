@@ -1,4 +1,4 @@
-package dev.harakki.comics.analytics.api;
+package dev.harakki.comics.shared.api;
 
 import java.util.List;
 import java.util.Set;

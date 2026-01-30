@@ -1,7 +1,7 @@
 package dev.harakki.comics.content.application;
 
-import dev.harakki.comics.analytics.api.ChapterReadEvent;
-import dev.harakki.comics.analytics.api.ChapterReadHistoryProvider;
+import dev.harakki.comics.content.api.ChapterReadEvent;
+import dev.harakki.comics.shared.api.ChapterReadHistoryProvider;
 import dev.harakki.comics.content.api.ChapterCreatedEvent;
 import dev.harakki.comics.content.api.ChapterDeletedEvent;
 import dev.harakki.comics.content.api.ChapterUpdatedEvent;

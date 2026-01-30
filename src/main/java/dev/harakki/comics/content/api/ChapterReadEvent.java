@@ -1,4 +1,4 @@
-package dev.harakki.comics.analytics.api;
+package dev.harakki.comics.content.api;
 
 import java.io.Serializable;
 import java.util.UUID;

@@ -1,9 +1,9 @@
 package dev.harakki.comics.catalog.application;
 
-import dev.harakki.comics.analytics.api.TitleViewedEvent;
 import dev.harakki.comics.catalog.api.TitleCreatedEvent;
 import dev.harakki.comics.catalog.api.TitleDeletedEvent;
 import dev.harakki.comics.catalog.api.TitleUpdatedEvent;
+import dev.harakki.comics.catalog.api.TitleViewedEvent;
 import dev.harakki.comics.catalog.domain.*;
 import dev.harakki.comics.catalog.dto.*;
 import dev.harakki.comics.catalog.infrastructure.*;

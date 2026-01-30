@@ -1,9 +1,9 @@
-package dev.harakki.comics.analytics.api;
+package dev.harakki.comics.library.api;
 
 import java.io.Serializable;
 import java.util.UUID;
 
-public record TitleRemoveFromLibraryEvent(
+public record LibraryRemoveTitleEvent(
         UUID titleId,
         UUID userId
 ) implements Serializable {

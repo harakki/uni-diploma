@@ -1,8 +1,7 @@
 @ApplicationModule(
         allowedDependencies = {
                 "shared",
-                "media :: api",
-                "analytics :: api"
+                "media :: api"
         }
 )
 package dev.harakki.comics.catalog;

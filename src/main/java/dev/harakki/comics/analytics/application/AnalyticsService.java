@@ -8,6 +8,8 @@ import dev.harakki.comics.analytics.infrastructure.UserInteractionRepository;
 import dev.harakki.comics.catalog.api.*;
 import dev.harakki.comics.collections.api.*;
 import dev.harakki.comics.content.api.*;
+import dev.harakki.comics.library.api.LibraryAddTitleEvent;
+import dev.harakki.comics.library.api.LibraryRemoveTitleEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -70,7 +72,7 @@ public class AnalyticsService {
     }
 
     @Transactional
-    public void recordTitleAddToLibrary(TitleAddToLibraryEvent event) {
+    public void recordTitleAddToLibrary(LibraryAddTitleEvent event) {
         var interaction = UserInteraction.builder()
                 .userId(event.userId())
                 .type(InteractionType.TITLE_ADDED_TO_LIBRARY)
@@ -80,7 +82,7 @@ public class AnalyticsService {
     }
 
     @Transactional
-    public void recordTitleRemoveFromLibrary(TitleRemoveFromLibraryEvent event) {
+    public void recordTitleRemoveFromLibrary(LibraryRemoveTitleEvent event) {
         var interaction = UserInteraction.builder()
                 .userId(event.userId())
                 .type(InteractionType.TITLE_REMOVED_FROM_LIBRARY)

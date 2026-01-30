@@ -1,8 +1,8 @@
 package dev.harakki.comics.library.application;
 
-import dev.harakki.comics.analytics.api.TitleAddToLibraryEvent;
-import dev.harakki.comics.analytics.api.TitleRemoveFromLibraryEvent;
-import dev.harakki.comics.analytics.api.TitleVoteEvent;
+import dev.harakki.comics.library.api.LibraryAddTitleEvent;
+import dev.harakki.comics.library.api.LibraryRemoveTitleEvent;
+import dev.harakki.comics.library.api.LibraryVoteTitleEvent;
 import dev.harakki.comics.library.domain.LibraryEntry;
 import dev.harakki.comics.library.domain.ReadingStatus;
 import dev.harakki.comics.library.dto.LibraryEntryCreateRequest;
@@ -51,7 +51,7 @@ public class LibraryEntryService {
             entry = libraryEntryRepository.save(entry);
             libraryEntryRepository.flush();
 
-            events.publishEvent(new TitleAddToLibraryEvent(request.titleId(), currentUserId));
+            events.publishEvent(new LibraryAddTitleEvent(request.titleId(), currentUserId));
             log.info("Added title {} to library for user {}", request.titleId(), currentUserId);
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Title already exists in library");
@@ -59,7 +59,7 @@ public class LibraryEntryService {
 
         // If initial rating provided, publish analytics event
         if (request.vote() != null) {
-            events.publishEvent(new TitleVoteEvent(request.titleId(), currentUserId, request.vote()));
+            events.publishEvent(new LibraryVoteTitleEvent(request.titleId(), currentUserId, request.vote()));
             log.debug("Published TitleVoteEvent for new library entry: titleId={}, userId={}, rating={}",
                     request.titleId(), currentUserId, request.vote());
         }
@@ -87,7 +87,7 @@ public class LibraryEntryService {
         // If vote changed, publish analytics event
         var newVote = entry.getVote();
         if (newVote != null && !newVote.equals(oldVote)) {
-            events.publishEvent(new TitleVoteEvent(entry.getTitleId(), currentUserId, newVote));
+            events.publishEvent(new LibraryVoteTitleEvent(entry.getTitleId(), currentUserId, newVote));
             log.debug("Published TitleVoteEvent for updated library entry: titleId={}, userId={}, rating={}",
                     entry.getTitleId(), currentUserId, newVote);
         }
@@ -108,7 +108,7 @@ public class LibraryEntryService {
 
         libraryEntryRepository.delete(entry);
 
-        events.publishEvent(new TitleRemoveFromLibraryEvent(entry.getTitleId(), currentUserId));
+        events.publishEvent(new LibraryRemoveTitleEvent(entry.getTitleId(), currentUserId));
         log.info("Removed library entry: id={} for user {}", entryId, currentUserId);
     }
 

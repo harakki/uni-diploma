@@ -6,13 +6,13 @@ import dev.harakki.comics.library.domain.ReadingStatus;
 import dev.harakki.comics.library.dto.LibraryEntryCreateRequest;
 import dev.harakki.comics.library.dto.LibraryEntryResponse;
 import dev.harakki.comics.library.dto.LibraryEntryUpdateRequest;
-import dev.harakki.comics.shared.api.ApiProblemResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -36,7 +36,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping(path = "/api/v1/library", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Library", description = "User's personal library management")
-@ApiProblemResponses
 @SecurityRequirement(name = "bearer-jwt")
 class LibraryEntryController {
 
@@ -44,18 +43,35 @@ class LibraryEntryController {
 
     @PostMapping("/entries")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Add title to library", description = "Add title to the authenticated user's library.")
-    @ApiResponse(responseCode = "201", description = "Title added to library",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = LibraryEntryResponse.class)))
+    @Operation(
+            operationId = "addToLibrary",
+            summary = "Add title to library",
+            description = "Add title to the authenticated user's library."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Title added to library",
+                    content = @Content(schema = @Schema(implementation = LibraryEntryResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "409", ref = "Conflict")
+    })
     public LibraryEntryResponse addToLibrary(@RequestBody @Valid LibraryEntryCreateRequest request) {
         return libraryEntryService.addToLibrary(request);
     }
 
     @PutMapping("/entries/{id}")
-    @Operation(summary = "Update library entry", description = "Update reading status, rating, or progress of a title.")
-    @ApiResponse(responseCode = "200", description = "Library entry updated")
+    @Operation(
+            operationId = "updateLibraryEntry",
+            summary = "Update library entry",
+            description = "Update reading status, rating, or progress of a title."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Library entry updated",
+                    content = @Content(schema = @Schema(implementation = LibraryEntryResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     public LibraryEntryResponse updateEntry(
+            @Parameter(description = "Library entry UUID", required = true)
             @PathVariable UUID id,
             @RequestBody @Valid LibraryEntryUpdateRequest request
     ) {
@@ -64,28 +80,64 @@ class LibraryEntryController {
 
     @DeleteMapping("/entries/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Remove from library", description = "Remove a title from the user's library.")
-    @ApiResponse(responseCode = "204", description = "Title removed from library")
-    public void removeFromLibrary(@PathVariable UUID id) {
+    @Operation(
+            operationId = "removeFromLibrary",
+            summary = "Remove from library",
+            description = "Remove a title from the user's library."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Title removed from library"),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
+    public void removeFromLibrary(
+            @Parameter(description = "Library entry UUID", required = true)
+            @PathVariable UUID id
+    ) {
         libraryEntryService.removeFromLibrary(id);
     }
 
     @GetMapping("/entries/{id}")
-    @Operation(summary = "Get library entry by ID", description = "Retrieve a specific library entry.")
-    @ApiResponse(responseCode = "200", description = "Library entry found")
-    public LibraryEntryResponse getEntry(@PathVariable @NotNull UUID id) {
+    @Operation(
+            operationId = "getLibraryEntryById",
+            summary = "Get library entry by ID",
+            description = "Retrieve a specific library entry."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Library entry found",
+                    content = @Content(schema = @Schema(implementation = LibraryEntryResponse.class))),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
+    public LibraryEntryResponse getEntry(
+            @Parameter(description = "Library entry UUID", required = true)
+            @PathVariable @NotNull UUID id
+    ) {
         return libraryEntryService.getById(id);
     }
 
     @GetMapping("/entries/by-title/{titleId}")
-    @Operation(summary = "Get library entry by title", description = "Check if a title is in the user's library.")
-    @ApiResponse(responseCode = "200", description = "Library entry found")
-    public LibraryEntryResponse getByTitleId(@PathVariable @NotNull UUID titleId) {
+    @Operation(
+            operationId = "getLibraryEntryByTitleId",
+            summary = "Get library entry by title",
+            description = "Check if a title is in the user's library."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Library entry found",
+                    content = @Content(schema = @Schema(implementation = LibraryEntryResponse.class))),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
+    public LibraryEntryResponse getByTitleId(
+            @Parameter(description = "Title UUID", required = true)
+            @PathVariable @NotNull UUID titleId
+    ) {
         return libraryEntryService.getByTitleId(titleId);
     }
 
     @GetMapping("/entries")
-    @Operation(summary = "Get my library", description = "Retrieve the authenticated user's library with optional filters.")
+    @Operation(
+            operationId = "getMyLibrary",
+            summary = "Get my library",
+            description = "Retrieve the authenticated user's library with optional filters."
+    )
     @Parameters({
             @Parameter(name = "status", description = "Filter by reading status", example = "READING")
     })
@@ -99,9 +151,13 @@ class LibraryEntryController {
     }
 
     @GetMapping("/entries/status/{status}")
-    @Operation(summary = "Get library by status", description = "Filter library entries by reading status.")
-    @ApiResponse(responseCode = "200", description = "Library entries retrieved")
+    @Operation(
+            operationId = "getLibraryByStatus",
+            summary = "Get library by status",
+            description = "Filter library entries by reading status."
+    )
     public Page<LibraryEntryResponse> getByStatus(
+            @Parameter(description = "Reading status", required = true)
             @PathVariable ReadingStatus status,
             @ParameterObject @PageableDefault(sort = "updatedAt") Pageable pageable
     ) {
@@ -109,9 +165,13 @@ class LibraryEntryController {
     }
 
     @GetMapping("/users/{userId}/entries")
-    @Operation(summary = "Get user's public library", description = "View another user's library entries.")
-    @ApiResponse(responseCode = "200", description = "Library entries retrieved")
+    @Operation(
+            operationId = "getUserLibrary",
+            summary = "Get user's public library",
+            description = "View another user's library entries."
+    )
     public Page<LibraryEntryResponse> getUserLibrary(
+            @Parameter(description = "User UUID", required = true)
             @PathVariable UUID userId,
             @ParameterObject @PageableDefault(sort = "updatedAt") Pageable pageable
     ) {

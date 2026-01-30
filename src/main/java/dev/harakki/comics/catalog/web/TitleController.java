@@ -4,13 +4,13 @@ import dev.harakki.comics.catalog.application.TitleService;
 import dev.harakki.comics.catalog.domain.Title;
 import dev.harakki.comics.catalog.domain.Title_;
 import dev.harakki.comics.catalog.dto.*;
-import dev.harakki.comics.shared.api.ApiProblemResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.validation.Valid;
@@ -36,23 +36,41 @@ import java.util.UUID;
 @RestController
 @RequestMapping(path = "/api/v1/titles", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Titles", description = "Management of comic titles")
-@ApiProblemResponses
 class TitleController {
 
     private final TitleService titleService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create title", description = "Create a new comic entry.")
-    @ApiResponse(responseCode = "201", description = "Title created successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = TitleResponse.class)))
+    @Operation(
+            operationId = "createTitle",
+            summary = "Create title",
+            description = "Create a new comic entry."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Title created successfully",
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "409", ref = "Conflict")
+    })
     public TitleResponse createTitle(@RequestBody @Valid TitleCreateRequest request) {
         return titleService.create(request);
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update title", description = "Update main metadata.")
-    @ApiResponse(responseCode = "200", description = "Title updated")
+    @Operation(
+            operationId = "updateTitle",
+            summary = "Update title",
+            description = "Update main metadata."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Title updated",
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     public TitleResponse updateTitle(
+            @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,
             @RequestBody @Valid TitleUpdateRequest request
     ) {
@@ -60,24 +78,47 @@ class TitleController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get title by ID", description = "Retrieve full details.")
-    @ApiResponse(responseCode = "200", description = "Title found")
-    public TitleResponse getTitle(@PathVariable @NotNull UUID id) {
+    @Operation(
+            operationId = "getTitleById",
+            summary = "Get title by ID",
+            description = "Retrieve full details."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Title found",
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
+    public TitleResponse getTitle(
+            @Parameter(description = "Title UUID", required = true)
+            @PathVariable @NotNull UUID id
+    ) {
         return titleService.getById(id);
     }
 
     @GetMapping("/slug/{slug}")
-    @Operation(summary = "Get title by slug", description = "SEO-friendly retrieval.")
-    @ApiResponse(responseCode = "200", description = "Title found")
+    @Operation(
+            operationId = "getTitleBySlug",
+            summary = "Get title by slug",
+            description = "SEO-friendly retrieval."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Title found",
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     public TitleResponse getTitleBySlug(
-            @Parameter(description = "URL slug", example = "chainsaw-man")
+            @Parameter(description = "URL slug", example = "chainsaw-man", required = true)
             @PathVariable @NotNull String slug
     ) {
         return titleService.getBySlug(slug);
     }
 
     @GetMapping
-    @Operation(summary = "Search and filter titles", description = "Retrieves titles with optional filtering.")
+    @Operation(
+            operationId = "searchTitles",
+            summary = "Search and filter titles",
+            description = "Retrieves titles with optional filtering."
+    )
     @Parameters({
             @Parameter(name = "search", description = "Search text", example = "chainsaw man"),
             @Parameter(name = "type", description = "Filter by type", example = "MANGA"),
@@ -87,7 +128,7 @@ class TitleController {
             @Parameter(name = "releaseYear", description = "Release year", example = "2018"),
             @Parameter(name = "yearFrom", description = "Min release year", example = "2000"),
             @Parameter(name = "yearTo", description = "Max release year", example = "2020"),
-            @Parameter(name = "contentRating", description = "Max content rating", example = "EROTICA")
+            @Parameter(name = "contentRating", description = "Max content rating", example = "EIGHTEEN_PLUS")
     })
     public Page<TitleResponse> getAllTitles(
             @Or({
@@ -114,15 +155,37 @@ class TitleController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Delete title", description = "Delete title entry.")
-    @ApiResponse(responseCode = "204", description = "Title deleted")
-    public void deleteTitle(@PathVariable @NotNull UUID id) {
+    @Operation(
+            operationId = "deleteTitle",
+            summary = "Delete title",
+            description = "Delete title entry."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Title deleted"),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
+    public void deleteTitle(
+            @Parameter(description = "Title UUID", required = true)
+            @PathVariable @NotNull UUID id
+    ) {
         titleService.delete(id);
     }
 
     @PutMapping("/{id}/slug")
-    @Operation(summary = "Update slug", description = "Update URL slug.")
+    @Operation(
+            operationId = "updateTitleSlug",
+            summary = "Update slug",
+            description = "Update URL slug."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Slug updated",
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "409", ref = "Conflict")
+    })
     public TitleResponse updateTitleSlug(
+            @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,
             @RequestBody @Valid ReplaceSlugRequest request
     ) {
@@ -130,9 +193,19 @@ class TitleController {
     }
 
     @PostMapping("/{id}/authors")
-    @Operation(summary = "Add author", description = "Link an author to the title.")
-    @ApiResponse(responseCode = "200", description = "Author added")
+    @Operation(
+            operationId = "addAuthorToTitle",
+            summary = "Add author",
+            description = "Link an author to the title."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Author added",
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     public TitleResponse addAuthor(
+            @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,
             @RequestBody @Valid TitleAddAuthorRequest request
     ) {
@@ -141,9 +214,20 @@ class TitleController {
 
     @DeleteMapping("/{id}/authors/{authorId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Remove author", description = "Unlink an author from the title.")
+    @Operation(
+            operationId = "removeAuthorFromTitle",
+            summary = "Remove author",
+            description = "Unlink an author from the title."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Author removed",
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     public TitleResponse removeAuthor(
+            @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,
+            @Parameter(description = "Author UUID", required = true)
             @PathVariable @NotNull UUID authorId
     ) {
         return titleService.removeAuthor(id, authorId);
@@ -151,14 +235,37 @@ class TitleController {
 
     @DeleteMapping("/{id}/publisher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Remove publisher", description = "Unlink the publisher from the title.")
-    public TitleResponse removePublisher(@PathVariable @NotNull UUID id) {
+    @Operation(
+            operationId = "removePublisherFromTitle",
+            summary = "Remove publisher",
+            description = "Unlink the publisher from the title."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Publisher removed",
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
+    public TitleResponse removePublisher(
+            @Parameter(description = "Title UUID", required = true)
+            @PathVariable @NotNull UUID id
+    ) {
         return titleService.removePublisher(id);
     }
 
     @PostMapping("/{id}/tags")
-    @Operation(summary = "Replace tags", description = "Fully replace the set of tags.")
+    @Operation(
+            operationId = "replaceTitleTags",
+            summary = "Replace tags",
+            description = "Fully replace the set of tags."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tags replaced",
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     public TitleResponse updateTags(
+            @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,
             @RequestBody @Valid ReplaceTagsRequest request
     ) {

@@ -2,6 +2,7 @@ package dev.harakki.comics.catalog.dto;
 
 import dev.harakki.comics.catalog.domain.TagType;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
@@ -13,5 +14,5 @@ public record TagResponse(
         String slug,
         TagType type,
         String description
-) {
+) implements Serializable {
 }

@@ -1,5 +1,6 @@
 package dev.harakki.comics.catalog.dto;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,5 +15,5 @@ public record PublisherResponse(
         List<String> websiteUrls,
         String countryIsoCode,
         UUID logoMediaId
-) {
+) implements Serializable {
 }

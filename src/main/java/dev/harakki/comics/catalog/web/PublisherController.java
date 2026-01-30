@@ -6,13 +6,13 @@ import dev.harakki.comics.catalog.dto.PublisherCreateRequest;
 import dev.harakki.comics.catalog.dto.PublisherResponse;
 import dev.harakki.comics.catalog.dto.PublisherUpdateRequest;
 import dev.harakki.comics.catalog.dto.ReplaceSlugRequest;
-import dev.harakki.comics.shared.api.ApiProblemResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -37,52 +37,93 @@ import java.util.UUID;
 @RestController
 @RequestMapping(path = "/api/v1/publishers", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Publishers", description = "Management of publishing houses.")
-@ApiProblemResponses
 class PublisherController {
 
     private final PublisherService publisherService;
 
+    @Operation(
+            operationId = "createPublisher",
+            summary = "Create publisher",
+            description = "Add a new publisher."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Publisher created",
+                    content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "409", ref = "Conflict")
+    })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create publisher", description = "Add a new publisher.")
-    @ApiResponse(responseCode = "201", description = "Publisher created", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = PublisherResponse.class)))
     public PublisherResponse createPublisher(@RequestBody @Valid PublisherCreateRequest request) {
         return publisherService.create(request);
     }
 
+    @Operation(
+            operationId = "updatePublisher",
+            summary = "Update publisher",
+            description = "Update publisher details."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Publisher updated",
+                    content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     @PutMapping("/{id}")
-    @Operation(summary = "Update publisher", description = "Update publisher details.")
-    @ApiResponse(responseCode = "200", description = "Publisher updated")
     public PublisherResponse updatePublisher(
+            @Parameter(description = "Publisher UUID", required = true)
             @PathVariable @NotNull UUID id,
             @RequestBody @Valid PublisherUpdateRequest request
     ) {
         return publisherService.update(id, request);
     }
 
+    @Operation(
+            operationId = "getPublisherById",
+            summary = "Get publisher by ID",
+            description = "Retrieve publisher by UUID."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Publisher found",
+                    content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     @GetMapping("/{id}")
-    @Operation(summary = "Get publisher by ID")
-    @ApiResponse(responseCode = "200", description = "Publisher found")
-    public PublisherResponse getPublisher(@PathVariable @NotNull UUID id) {
+    public PublisherResponse getPublisher(
+            @Parameter(description = "Publisher UUID", required = true)
+            @PathVariable @NotNull UUID id
+    ) {
         return publisherService.getById(id);
     }
 
+    @Operation(
+            operationId = "getPublisherBySlug",
+            summary = "Get publisher by slug",
+            description = "SEO-friendly retrieval."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Publisher found",
+                    content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     @GetMapping("/slug/{slug}")
-    @Operation(summary = "Get publisher by slug")
-    @ApiResponse(responseCode = "200", description = "Publisher found")
     public PublisherResponse getPublisherBySlug(
-            @Parameter(description = "URL slug", example = "shueisha")
+            @Parameter(description = "URL slug", example = "shueisha", required = true)
             @PathVariable @NotNull String slug
     ) {
         return publisherService.getBySlug(slug);
     }
 
-    @GetMapping
-    @Operation(summary = "Search and filter publishers", description = "Retrieves publishers with optional filtering.")
+    @Operation(
+            operationId = "searchPublishers",
+            summary = "Search and filter publishers",
+            description = "Retrieves publishers with optional filtering."
+    )
     @Parameters({
             @Parameter(name = "search", description = "Search by name or slug", example = "shueisha"),
             @Parameter(name = "country", description = "Filter by Country ISO Code", example = "JP")
     })
+    @GetMapping
     public Page<PublisherResponse> getAllPublishers(
             @Or({
                     @Spec(path = "name", params = "search", spec = LikeIgnoreCase.class),
@@ -97,17 +138,39 @@ class PublisherController {
         return publisherService.getAll(spec, pageable);
     }
 
+    @Operation(
+            operationId = "deletePublisher",
+            summary = "Delete publisher",
+            description = "Delete publisher entry."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Publisher deleted"),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Delete publisher", description = "Delete publisher entry.")
-    @ApiResponse(responseCode = "204", description = "Publisher deleted")
-    public void deletePublisher(@PathVariable @NotNull UUID id) {
+    public void deletePublisher(
+            @Parameter(description = "Publisher UUID", required = true)
+            @PathVariable @NotNull UUID id
+    ) {
         publisherService.delete(id);
     }
 
+    @Operation(
+            operationId = "updatePublisherSlug",
+            summary = "Update slug",
+            description = "Manually change the URL slug."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Slug updated",
+                    content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "409", ref = "Conflict")
+    })
     @PutMapping("/{id}/slug")
-    @Operation(summary = "Update slug")
     public PublisherResponse updatePublisherSlug(
+            @Parameter(description = "Publisher UUID", required = true)
             @PathVariable @NotNull UUID id,
             @RequestBody @Valid ReplaceSlugRequest request
     ) {

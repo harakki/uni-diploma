@@ -4,6 +4,7 @@ import dev.harakki.comics.catalog.domain.ContentRating;
 import dev.harakki.comics.catalog.domain.TitleStatus;
 import dev.harakki.comics.catalog.domain.TitleType;
 
+import java.io.Serializable;
 import java.time.Year;
 import java.util.List;
 import java.util.Set;
@@ -27,5 +28,5 @@ public record TitleResponse(
         List<TitleAuthorResponse> authors,
         PublisherResponse publisher,
         Set<TagResponse> tags
-) {
+) implements Serializable {
 }

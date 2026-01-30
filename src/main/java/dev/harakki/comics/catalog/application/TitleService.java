@@ -1,5 +1,8 @@
 package dev.harakki.comics.catalog.application;
 
+import dev.harakki.comics.catalog.api.TitleCreatedEvent;
+import dev.harakki.comics.catalog.api.TitleDeletedEvent;
+import dev.harakki.comics.catalog.api.TitleUpdatedEvent;
 import dev.harakki.comics.catalog.domain.*;
 import dev.harakki.comics.catalog.dto.*;
 import dev.harakki.comics.catalog.infrastructure.*;
@@ -8,6 +11,7 @@ import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import dev.harakki.comics.shared.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -101,6 +105,12 @@ public class TitleService {
         try {
             title = titleRepository.save(title);
             log.info("Created title: id={}, name={}", title.getId(), title.getName());
+
+            // Publish analytics event
+            var userId = SecurityUtils.getOptionalCurrentUserId().map(UUID::fromString).orElse(null);
+            if (userId != null) {
+                eventPublisher.publishEvent(new TitleCreatedEvent(title.getId(), userId, title.getName()));
+            }
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Title with this slug already exists");
         }
@@ -137,6 +147,13 @@ public class TitleService {
 
         title = titleRepository.save(title);
         log.debug("Updated title: id={}", id);
+
+        // Publish analytics event
+        var userId = SecurityUtils.getOptionalCurrentUserId().map(UUID::fromString).orElse(null);
+        if (userId != null) {
+            eventPublisher.publishEvent(new TitleUpdatedEvent(title.getId(), userId));
+        }
+
         return titleMapper.toResponse(title);
     }
 
@@ -167,6 +184,12 @@ public class TitleService {
 
             if (title.getMainCoverMediaId() != null) {
                 eventPublisher.publishEvent(new MediaDeleteRequestedEvent(title.getMainCoverMediaId()));
+            }
+
+            // Publish analytics event
+            var userId = SecurityUtils.getOptionalCurrentUserId().map(UUID::fromString).orElse(null);
+            if (userId != null) {
+                eventPublisher.publishEvent(new TitleDeletedEvent(title.getId(), userId));
             }
 
             log.info("Deleted title: id={}", id);

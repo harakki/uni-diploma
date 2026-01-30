@@ -1,10 +1,12 @@
 package dev.harakki.comics.catalog.web;
 
+import dev.harakki.comics.analytics.api.TitleViewedEvent;
 import dev.harakki.comics.catalog.application.TitleService;
 import dev.harakki.comics.catalog.domain.Title;
 import dev.harakki.comics.catalog.domain.Title_;
 import dev.harakki.comics.catalog.dto.*;
 import dev.harakki.comics.shared.api.ApiProblemResponses;
+import dev.harakki.comics.shared.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -23,6 +25,7 @@ import net.kaczmarzyk.spring.data.jpa.web.annotation.Join;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.Or;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.Spec;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -41,6 +44,7 @@ import java.util.UUID;
 class TitleController {
 
     private final TitleService titleService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -64,7 +68,15 @@ class TitleController {
     @Operation(summary = "Get title by ID", description = "Retrieve full details.")
     @ApiResponse(responseCode = "200", description = "Title found")
     public TitleResponse getTitle(@PathVariable @NotNull UUID id) {
-        return titleService.getById(id);
+        var response = titleService.getById(id);
+        
+        // Publish TitleViewedEvent for analytics
+        var userId = SecurityUtils.getOptionalCurrentUserId().map(UUID::fromString).orElse(null);
+        if (userId != null) {
+            eventPublisher.publishEvent(new TitleViewedEvent(id, userId));
+        }
+        
+        return response;
     }
 
     @GetMapping("/slug/{slug}")
@@ -74,7 +86,15 @@ class TitleController {
             @Parameter(description = "URL slug", example = "chainsaw-man")
             @PathVariable @NotNull String slug
     ) {
-        return titleService.getBySlug(slug);
+        var response = titleService.getBySlug(slug);
+        
+        // Publish TitleViewedEvent for analytics
+        var userId = SecurityUtils.getOptionalCurrentUserId().map(UUID::fromString).orElse(null);
+        if (userId != null) {
+            eventPublisher.publishEvent(new TitleViewedEvent(response.id(), userId));
+        }
+        
+        return response;
     }
 
     @GetMapping

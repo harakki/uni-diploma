@@ -1,7 +1,4 @@
-@ApplicationModule(
-        displayName = "Catalog API",
-        allowedDependencies = {"shared::api"}
-)
+@NamedInterface("api")
 package dev.harakki.comics.catalog.api;
 
-import org.springframework.modulith.ApplicationModule;
+import org.springframework.modulith.NamedInterface;

@@ -165,7 +165,7 @@ public class LibraryEntryService {
     }
 
     private UUID getCurrentUserId() {
-        return UUID.fromString(SecurityUtils.getCurrentUserId());
+        return SecurityUtils.getCurrentUserId();
     }
 
 }

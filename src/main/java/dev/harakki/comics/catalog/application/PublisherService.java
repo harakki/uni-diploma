@@ -1,5 +1,8 @@
 package dev.harakki.comics.catalog.application;
 
+import dev.harakki.comics.catalog.api.PublisherCreatedEvent;
+import dev.harakki.comics.catalog.api.PublisherDeletedEvent;
+import dev.harakki.comics.catalog.api.PublisherUpdatedEvent;
 import dev.harakki.comics.catalog.domain.Publisher;
 import dev.harakki.comics.catalog.dto.PublisherCreateRequest;
 import dev.harakki.comics.catalog.dto.PublisherResponse;
@@ -12,6 +15,7 @@ import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import dev.harakki.comics.shared.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +64,10 @@ public class PublisherService {
         try {
             publisher = publisherRepository.save(publisher);
             log.info("Created publisher: id={}, slug={}", publisher.getId(), publisher.getSlug());
+
+            var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+            eventPublisher.publishEvent(new PublisherCreatedEvent(publisher.getId(), userId, publisher.getName()));
+
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Publisher with this name or slug already exists");
         }
@@ -93,6 +101,9 @@ public class PublisherService {
         publisher = publisherRepository.save(publisher);
         log.debug("Updated publisher: id={}", id);
 
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new PublisherUpdatedEvent(publisher.getId(), userId));
+
         return publisherMapper.toResponse(publisher);
     }
 
@@ -107,9 +118,12 @@ public class PublisherService {
 
         publisher.setSlug(request.slug());
         publisher = publisherRepository.save(publisher);
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new PublisherUpdatedEvent(publisher.getId(), userId));
+
         return publisherMapper.toResponse(publisher);
     }
-
 
     public PublisherResponse getById(UUID id) {
         return publisherRepository.findById(id)
@@ -122,7 +136,6 @@ public class PublisherService {
                 .map(publisherMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Publisher with slug '" + slug + "' not found"));
     }
-
 
     public Page<PublisherResponse> getAll(Specification<Publisher> spec, Pageable pageable) {
         return publisherRepository.findAll(spec, pageable)
@@ -140,6 +153,9 @@ public class PublisherService {
             if (publisher.getLogoMediaId() != null) {
                 eventPublisher.publishEvent(new MediaDeleteRequestedEvent(publisher.getLogoMediaId()));
             }
+
+            var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+            eventPublisher.publishEvent(new PublisherDeletedEvent(publisher.getId(), userId));
 
             log.info("Deleted publisher: id={}", id);
         } catch (DataIntegrityViolationException e) {

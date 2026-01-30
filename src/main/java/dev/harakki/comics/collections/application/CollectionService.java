@@ -1,5 +1,6 @@
 package dev.harakki.comics.collections.application;
 
+import dev.harakki.comics.collections.api.*;
 import dev.harakki.comics.collections.dto.CollectionCreateRequest;
 import dev.harakki.comics.collections.dto.CollectionUpdateRequest;
 import dev.harakki.comics.collections.dto.UserCollectionResponse;
@@ -10,6 +11,7 @@ import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import dev.harakki.comics.shared.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +33,7 @@ public class CollectionService {
 
     private final CollectionRepository repository;
     private final CollectionMapper mapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public UserCollectionResponse create(CollectionCreateRequest request) {
@@ -47,6 +50,12 @@ public class CollectionService {
             entity = repository.save(entity);
             repository.flush();
             log.info("Created collection {} by user {}", entity.getId(), currentUserId);
+
+            eventPublisher.publishEvent(new CollectionCreatedEvent(
+                    entity.getId(),
+                    currentUserId,
+                    entity.getName()
+            ));
         } catch (DataIntegrityViolationException e) {
             throw new RuntimeException("Failed to create collection: " + e.getMessage());
         }
@@ -105,6 +114,8 @@ public class CollectionService {
 
         entity = repository.save(entity);
 
+        eventPublisher.publishEvent(new CollectionUpdatedEvent(entity.getId(), currentUserId));
+
         log.debug("Updated collection: id={}", id);
         return mapper.toResponse(entity);
     }
@@ -121,6 +132,9 @@ public class CollectionService {
         }
 
         repository.delete(entity);
+
+        eventPublisher.publishEvent(new CollectionDeletedEvent(entity.getId(), currentUserId));
+
         log.info("Deleted collection: id={} by user {}", id, currentUserId);
     }
 
@@ -169,22 +183,40 @@ public class CollectionService {
     }
 
     public UserCollectionResponse addTitles(UUID id, List<UUID> titleIds) {
+        var currentUserId = getCurrentUserId();
         var existing = getById(id);
         List<UUID> combined = new ArrayList<>(existing.titleIds());
+
+        // Find new titles being added
+        List<UUID> newTitles = titleIds.stream()
+                .filter(titleId -> !combined.contains(titleId))
+                .toList();
+
         combined.addAll(titleIds);
         var update = new CollectionUpdateRequest(null, null, null, combined);
-        return update(id, update);
+        var result = update(id, update);
+
+        newTitles.forEach(titleId ->
+                eventPublisher.publishEvent(new CollectionTitleAddedEvent(id, titleId, currentUserId))
+        );
+
+        return result;
     }
 
     public UserCollectionResponse removeTitle(UUID id, UUID titleId) {
+        var currentUserId = getCurrentUserId();
         var existing = getById(id);
         var ids = existing.titleIds().stream().filter(t -> !t.equals(titleId)).toList();
         var update = new CollectionUpdateRequest(null, null, null, ids);
-        return update(id, update);
+        var result = update(id, update);
+
+        eventPublisher.publishEvent(new CollectionTitleRemovedEvent(id, titleId, currentUserId));
+
+        return result;
     }
 
     private UUID getCurrentUserId() {
-        return UUID.fromString(SecurityUtils.getCurrentUserId());
+        return SecurityUtils.getCurrentUserId();
     }
 
     private String generateUniqueToken() {

@@ -1,5 +1,8 @@
 package dev.harakki.comics.catalog.application;
 
+import dev.harakki.comics.catalog.api.AuthorCreatedEvent;
+import dev.harakki.comics.catalog.api.AuthorDeletedEvent;
+import dev.harakki.comics.catalog.api.AuthorUpdatedEvent;
 import dev.harakki.comics.catalog.domain.Author;
 import dev.harakki.comics.catalog.dto.AuthorCreateRequest;
 import dev.harakki.comics.catalog.dto.AuthorResponse;
@@ -12,6 +15,7 @@ import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import dev.harakki.comics.shared.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +64,10 @@ public class AuthorService {
         try {
             author = authorRepository.save(author);
             log.info("Created author: id={}, slug={}", author.getId(), author.getSlug());
+
+            var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+            eventPublisher.publishEvent(new AuthorCreatedEvent(author.getId(), userId, author.getName()));
+
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Author with this name or slug already exists");
         }
@@ -89,6 +97,9 @@ public class AuthorService {
         author = authorRepository.save(author);
         log.debug("Updated author: id={}", id);
 
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new AuthorUpdatedEvent(author.getId(), userId));
+
         return authorMapper.toResponse(author);
     }
 
@@ -103,6 +114,10 @@ public class AuthorService {
 
         author.setSlug(request.slug());
         author = authorRepository.save(author);
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new AuthorUpdatedEvent(author.getId(), userId));
+
         return authorMapper.toResponse(author);
     }
 
@@ -118,7 +133,6 @@ public class AuthorService {
                 .map(authorMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Author with slug " + slug + " not found"));
     }
-
 
     public Page<AuthorResponse> getAll(Specification<Author> spec, Pageable pageable) {
         return authorRepository.findAll(spec, pageable)
@@ -136,6 +150,9 @@ public class AuthorService {
             if (author.getMainCoverMediaId() != null) {
                 eventPublisher.publishEvent(new MediaDeleteRequestedEvent(author.getMainCoverMediaId()));
             }
+
+            var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+            eventPublisher.publishEvent(new AuthorDeletedEvent(author.getId(), userId));
 
             log.info("Deleted author: id={}", id);
         } catch (DataIntegrityViolationException e) {

@@ -1,5 +1,9 @@
 package dev.harakki.comics.catalog.application;
 
+import dev.harakki.comics.analytics.api.TitleViewedEvent;
+import dev.harakki.comics.catalog.api.TitleCreatedEvent;
+import dev.harakki.comics.catalog.api.TitleDeletedEvent;
+import dev.harakki.comics.catalog.api.TitleUpdatedEvent;
 import dev.harakki.comics.catalog.domain.*;
 import dev.harakki.comics.catalog.dto.*;
 import dev.harakki.comics.catalog.infrastructure.*;
@@ -8,6 +12,7 @@ import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.shared.exception.ResourceAlreadyExistsException;
 import dev.harakki.comics.shared.exception.ResourceInUseException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import dev.harakki.comics.shared.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -101,6 +106,10 @@ public class TitleService {
         try {
             title = titleRepository.save(title);
             log.info("Created title: id={}, name={}", title.getId(), title.getName());
+
+            var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+            eventPublisher.publishEvent(new TitleCreatedEvent(title.getId(), userId, title.getName()));
+
         } catch (DataIntegrityViolationException e) {
             throw new ResourceAlreadyExistsException("Title with this slug already exists");
         }
@@ -137,19 +146,33 @@ public class TitleService {
 
         title = titleRepository.save(title);
         log.debug("Updated title: id={}", id);
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new TitleUpdatedEvent(title.getId(), userId));
+
         return titleMapper.toResponse(title);
     }
 
     public TitleResponse getById(UUID id) {
-        return titleRepository.findById(id)
+        var response = titleRepository.findById(id)
                 .map(titleMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Title with id " + id + " not found"));
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new TitleViewedEvent(response.id(), userId));
+
+        return response;
     }
 
     public TitleResponse getBySlug(String slug) {
-        return titleRepository.findBySlug(slug)
+        var response = titleRepository.findBySlug(slug)
                 .map(titleMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Title with slug '" + slug + "' not found"));
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new TitleViewedEvent(response.id(), userId));
+
+        return response;
     }
 
     public Page<TitleResponse> getAll(Specification<Title> spec, Pageable pageable) {
@@ -168,6 +191,9 @@ public class TitleService {
             if (title.getMainCoverMediaId() != null) {
                 eventPublisher.publishEvent(new MediaDeleteRequestedEvent(title.getMainCoverMediaId()));
             }
+
+            var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+            eventPublisher.publishEvent(new TitleDeletedEvent(title.getId(), userId));
 
             log.info("Deleted title: id={}", id);
         } catch (DataIntegrityViolationException e) {
@@ -202,7 +228,12 @@ public class TitleService {
 
         title.getAuthors().add(titleAuthor);
 
-        return titleMapper.toResponse(titleRepository.save(title));
+        title = titleRepository.save(title);
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new TitleUpdatedEvent(title.getId(), userId));
+
+        return titleMapper.toResponse(title);
     }
 
     @Transactional
@@ -216,6 +247,9 @@ public class TitleService {
 
         title.setSlug(request.slug());
         title = titleRepository.save(title);
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new TitleUpdatedEvent(title.getId(), userId));
 
         return titleMapper.toResponse(title);
     }
@@ -236,7 +270,12 @@ public class TitleService {
             ta.setSortOrder(sortOrder++);
         }
 
-        return titleMapper.toResponse(titleRepository.save(title));
+        title = titleRepository.save(title);
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new TitleUpdatedEvent(title.getId(), userId));
+
+        return titleMapper.toResponse(title);
     }
 
     @Transactional
@@ -246,7 +285,12 @@ public class TitleService {
 
         title.setPublisher(null);
 
-        return titleMapper.toResponse(titleRepository.save(title));
+        title = titleRepository.save(title);
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new TitleUpdatedEvent(title.getId(), userId));
+
+        return titleMapper.toResponse(title);
     }
 
     @Transactional
@@ -264,7 +308,12 @@ public class TitleService {
             title.setTags(newTags);
         }
 
-        return titleMapper.toResponse(titleRepository.save(title));
+        title = titleRepository.save(title);
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new TitleUpdatedEvent(title.getId(), userId));
+
+        return titleMapper.toResponse(title);
     }
 
 }

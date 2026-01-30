@@ -2,6 +2,9 @@ package dev.harakki.comics.content.application;
 
 import dev.harakki.comics.analytics.api.ChapterReadEvent;
 import dev.harakki.comics.analytics.api.ChapterReadHistoryProvider;
+import dev.harakki.comics.content.api.ChapterCreatedEvent;
+import dev.harakki.comics.content.api.ChapterDeletedEvent;
+import dev.harakki.comics.content.api.ChapterUpdatedEvent;
 import dev.harakki.comics.content.domain.Chapter;
 import dev.harakki.comics.content.domain.Page;
 import dev.harakki.comics.content.dto.*;
@@ -11,6 +14,7 @@ import dev.harakki.comics.media.api.MediaDeleteRequestedEvent;
 import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.media.api.MediaUrlProvider;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
+import dev.harakki.comics.shared.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -58,6 +62,14 @@ public class ChapterService {
         chapterRepository.save(chapter);
 
         request.pages().forEach(mediaId -> eventPublisher.publishEvent(new MediaFixateRequestedEvent(mediaId)));
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new ChapterCreatedEvent(
+                chapter.getId(),
+                titleId,
+                userId,
+                chapter.getDisplayNumber()
+        ));
 
         log.info("Created chapter: titleId={}, number={}.{}", titleId, request.number(), request.subNumber());
     }
@@ -109,6 +121,13 @@ public class ChapterService {
                 .filter(id -> !newMediaIdsSet.contains(id))
                 .forEach(id -> eventPublisher.publishEvent(new MediaDeleteRequestedEvent(id)));
 
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new ChapterUpdatedEvent(
+                chapter.getId(),
+                chapter.getTitleId(),
+                userId
+        ));
+
         log.info("Updated pages for chapter {}: {} total", chapterId, newMediaIds.size());
     }
 
@@ -124,8 +143,14 @@ public class ChapterService {
         chapterRepository.delete(chapter);
         chapterRepository.flush();
 
-        // Asynchronously request media deletion
         mediaIdsToDelete.forEach(id -> eventPublisher.publishEvent(new MediaDeleteRequestedEvent(id)));
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new ChapterDeletedEvent(
+                chapter.getId(),
+                chapter.getTitleId(),
+                userId
+        ));
 
         log.info("Deleted chapter {} and requested deletion of {} pages", chapterId, mediaIdsToDelete.size());
     }
@@ -149,6 +174,14 @@ public class ChapterService {
         chapter = chapterMapper.partialUpdate(request, chapter);
 
         chapterRepository.save(chapter);
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        eventPublisher.publishEvent(new ChapterUpdatedEvent(
+                chapter.getId(),
+                chapter.getTitleId(),
+                userId
+        ));
+
         log.debug("Updated chapter: id={} metadata", chapterId);
     }
 

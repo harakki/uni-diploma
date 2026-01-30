@@ -6,6 +6,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public final class SecurityUtils {
 
@@ -18,14 +19,15 @@ public final class SecurityUtils {
         return Optional.empty();
     }
 
-    public static String getCurrentUserId() {
+    public static UUID getCurrentUserId() {
         return getCurrentJwt()
                 .map(Jwt::getSubject)
+                .map(UUID::fromString)
                 .orElseThrow(() -> new AccessDeniedException("No authenticated user found"));
     }
 
-    public static Optional<String> getOptionalCurrentUserId() {
-        return getCurrentJwt().map(Jwt::getSubject);
+    public static Optional<UUID> getOptionalCurrentUserId() {
+        return getCurrentJwt().map(Jwt::getSubject).map(UUID::fromString);
     }
 
     public static String getCurrentUsername() {

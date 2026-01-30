@@ -146,7 +146,11 @@ public class LibraryEntryService {
     }
 
     public Page<LibraryEntryResponse> getUserLibrary(UUID userId, Pageable pageable) {
-        // FIXME : Add privacy checks
+        UUID currentUserId = getCurrentUserId();
+        if (!userId.equals(currentUserId)) {
+            throw new AccessDeniedException("You don't have permission to view this user's library");
+        }
+
         return libraryEntryRepository.findByUserId(userId, pageable)
                 .map(libraryEntryMapper::toResponse);
     }

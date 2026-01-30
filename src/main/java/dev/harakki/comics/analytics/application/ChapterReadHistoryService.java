@@ -1,8 +1,8 @@
 package dev.harakki.comics.analytics.application;
 
-import dev.harakki.comics.shared.api.ChapterReadHistoryProvider;
 import dev.harakki.comics.analytics.domain.InteractionType;
 import dev.harakki.comics.analytics.infrastructure.UserInteractionRepository;
+import dev.harakki.comics.shared.api.ChapterReadHistoryProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,6 +1,8 @@
 package dev.harakki.comics.catalog.dto;
 
-import dev.harakki.comics.catalog.domain.*;
+import dev.harakki.comics.catalog.domain.ContentRating;
+import dev.harakki.comics.catalog.domain.TitleStatus;
+import dev.harakki.comics.catalog.domain.TitleType;
 
 import java.time.Year;
 import java.util.List;

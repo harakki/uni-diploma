@@ -1,13 +1,17 @@
 package dev.harakki.comics.analytics.application;
 
-import dev.harakki.comics.analytics.api.*;
+import dev.harakki.comics.analytics.api.TitleDislikedEvent;
+import dev.harakki.comics.analytics.api.TitleLikedEvent;
 import dev.harakki.comics.analytics.domain.InteractionType;
 import dev.harakki.comics.analytics.domain.UserInteraction;
 import dev.harakki.comics.analytics.dto.TitleAnalyticsResponse;
 import dev.harakki.comics.analytics.infrastructure.UserInteractionRepository;
 import dev.harakki.comics.catalog.api.*;
 import dev.harakki.comics.collections.api.*;
-import dev.harakki.comics.content.api.*;
+import dev.harakki.comics.content.api.ChapterCreatedEvent;
+import dev.harakki.comics.content.api.ChapterDeletedEvent;
+import dev.harakki.comics.content.api.ChapterReadEvent;
+import dev.harakki.comics.content.api.ChapterUpdatedEvent;
 import dev.harakki.comics.library.api.LibraryAddTitleEvent;
 import dev.harakki.comics.library.api.LibraryRemoveTitleEvent;
 import lombok.RequiredArgsConstructor;

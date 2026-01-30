@@ -1,7 +1,7 @@
 package dev.harakki.comics.media.application;
 
-import dev.harakki.comics.media.domain.MediaStatus;
 import dev.harakki.comics.media.domain.Media;
+import dev.harakki.comics.media.domain.MediaStatus;
 import dev.harakki.comics.media.infrastructure.MediaRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

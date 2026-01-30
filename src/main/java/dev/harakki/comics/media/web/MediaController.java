@@ -1,8 +1,8 @@
 package dev.harakki.comics.media.web;
 
+import dev.harakki.comics.media.application.MediaService;
 import dev.harakki.comics.media.dto.MediaUploadUrlRequest;
 import dev.harakki.comics.media.dto.MediaUploadUrlResponse;
-import dev.harakki.comics.media.application.MediaService;
 import dev.harakki.comics.shared.api.ApiProblemResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

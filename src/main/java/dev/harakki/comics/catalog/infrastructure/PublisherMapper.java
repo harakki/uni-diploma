@@ -15,5 +15,5 @@ public interface PublisherMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     Publisher partialUpdate(PublisherUpdateRequest dto, @MappingTarget Publisher publisher);
-    
+
 }

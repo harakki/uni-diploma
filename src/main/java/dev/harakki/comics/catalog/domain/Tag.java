@@ -39,7 +39,7 @@ public class Tag {
 
     @Column(columnDefinition = "TEXT")
     private String description;
-    
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

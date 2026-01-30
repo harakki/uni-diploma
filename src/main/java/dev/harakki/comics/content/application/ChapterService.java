@@ -1,9 +1,8 @@
 package dev.harakki.comics.content.application;
 
-import dev.harakki.comics.content.api.ChapterReadEvent;
-import dev.harakki.comics.shared.api.ChapterReadHistoryProvider;
 import dev.harakki.comics.content.api.ChapterCreatedEvent;
 import dev.harakki.comics.content.api.ChapterDeletedEvent;
+import dev.harakki.comics.content.api.ChapterReadEvent;
 import dev.harakki.comics.content.api.ChapterUpdatedEvent;
 import dev.harakki.comics.content.domain.Chapter;
 import dev.harakki.comics.content.domain.Page;
@@ -13,6 +12,7 @@ import dev.harakki.comics.content.infrastructure.ChapterRepository;
 import dev.harakki.comics.media.api.MediaDeleteRequestedEvent;
 import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.media.api.MediaUrlProvider;
+import dev.harakki.comics.shared.api.ChapterReadHistoryProvider;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import dev.harakki.comics.shared.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;

@@ -2,8 +2,8 @@ package dev.harakki.comics.collections.infrastructure;
 
 import dev.harakki.comics.collections.domain.Collection;
 import dev.harakki.comics.collections.dto.CollectionCreateRequest;
-import dev.harakki.comics.collections.dto.UserCollectionResponse;
 import dev.harakki.comics.collections.dto.CollectionUpdateRequest;
+import dev.harakki.comics.collections.dto.UserCollectionResponse;
 import org.mapstruct.*;
 
 import java.util.ArrayList;

@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 public record LibraryAddTitleEvent(
-    UUID titleId,
-    UUID userId
+        UUID titleId,
+        UUID userId
 ) implements Serializable {
 }

@@ -1,7 +1,7 @@
 package dev.harakki.comics.media.infrastructure;
 
-import dev.harakki.comics.media.domain.MediaStatus;
 import dev.harakki.comics.media.domain.Media;
+import dev.harakki.comics.media.domain.MediaStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

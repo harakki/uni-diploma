@@ -51,6 +51,8 @@ class TitleController {
             @ApiResponse(responseCode = "201", description = "Title created successfully",
                     content = @Content(schema = @Schema(implementation = TitleResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
     public TitleResponse createTitle(@RequestBody @Valid TitleCreateRequest request) {
@@ -67,6 +69,8 @@ class TitleController {
             @ApiResponse(responseCode = "200", description = "Title updated",
                     content = @Content(schema = @Schema(implementation = TitleResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public TitleResponse updateTitle(
@@ -119,6 +123,11 @@ class TitleController {
             summary = "Search and filter titles",
             description = "Retrieves titles with optional filtering."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page of titles",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest")
+    })
     @Parameters({
             @Parameter(name = "search", description = "Search text", example = "chainsaw man"),
             @Parameter(name = "type", description = "Filter by type", example = "MANGA"),
@@ -162,6 +171,8 @@ class TitleController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Title deleted"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void deleteTitle(
@@ -181,6 +192,8 @@ class TitleController {
             @ApiResponse(responseCode = "200", description = "Slug updated",
                     content = @Content(schema = @Schema(implementation = TitleResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
@@ -202,6 +215,8 @@ class TitleController {
             @ApiResponse(responseCode = "200", description = "Author added",
                     content = @Content(schema = @Schema(implementation = TitleResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public TitleResponse addAuthor(
@@ -213,7 +228,6 @@ class TitleController {
     }
 
     @DeleteMapping("/{id}/authors/{authorId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             operationId = "removeAuthorFromTitle",
             summary = "Remove author",
@@ -222,6 +236,8 @@ class TitleController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Author removed",
                     content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public TitleResponse removeAuthor(
@@ -234,7 +250,6 @@ class TitleController {
     }
 
     @DeleteMapping("/{id}/publisher")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             operationId = "removePublisherFromTitle",
             summary = "Remove publisher",
@@ -243,6 +258,8 @@ class TitleController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Publisher removed",
                     content = @Content(schema = @Schema(implementation = TitleResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public TitleResponse removePublisher(
@@ -262,6 +279,8 @@ class TitleController {
             @ApiResponse(responseCode = "200", description = "Tags replaced",
                     content = @Content(schema = @Schema(implementation = TitleResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public TitleResponse updateTags(

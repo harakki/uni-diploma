@@ -45,6 +45,7 @@ public class UserCollectionController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Collection created",
                     content = @Content(schema = @Schema(implementation = UserCollectionResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "400", ref = "BadRequest")
     })
     public UserCollectionResponse create(@RequestBody @Valid CollectionCreateRequest request) {
@@ -89,6 +90,11 @@ public class UserCollectionController {
             summary = "Get my collections",
             description = "Get all collections of the current user"
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Collections retrieved",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized")
+    })
     public Page<UserCollectionResponse> getMyCollections(
             @Parameter(description = "Search query")
             @RequestParam(required = false) String search,
@@ -107,6 +113,8 @@ public class UserCollectionController {
             @ApiResponse(responseCode = "200", description = "Collection updated",
                     content = @Content(schema = @Schema(implementation = UserCollectionResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public UserCollectionResponse update(
@@ -126,6 +134,8 @@ public class UserCollectionController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Collection deleted"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void delete(
@@ -144,6 +154,8 @@ public class UserCollectionController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Share link generated",
                     content = @Content(schema = @Schema(implementation = UserCollectionResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public UserCollectionResponse generateShareLink(
@@ -181,6 +193,8 @@ public class UserCollectionController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Share link revoked",
                     content = @Content(schema = @Schema(implementation = UserCollectionResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public UserCollectionResponse revokeShareLink(
@@ -200,6 +214,8 @@ public class UserCollectionController {
             @ApiResponse(responseCode = "200", description = "Titles added",
                     content = @Content(schema = @Schema(implementation = UserCollectionResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public UserCollectionResponse addTitles(
@@ -219,6 +235,8 @@ public class UserCollectionController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Title removed",
                     content = @Content(schema = @Schema(implementation = UserCollectionResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public UserCollectionResponse removeTitle(

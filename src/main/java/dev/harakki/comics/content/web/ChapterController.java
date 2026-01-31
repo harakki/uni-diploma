@@ -37,6 +37,8 @@ public class ChapterController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Chapter created"),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void createChapter(
@@ -92,6 +94,8 @@ public class ChapterController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Chapter updated"),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void updateChapter(
@@ -111,6 +115,8 @@ public class ChapterController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Chapter deleted"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void deleteChapter(
@@ -130,6 +136,8 @@ public class ChapterController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Pages updated"),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void updatePages(
@@ -149,6 +157,7 @@ public class ChapterController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Read recorded"),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void recordChapterRead(
@@ -170,6 +179,7 @@ public class ChapterController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Read status",
                     content = @Content(schema = @Schema(implementation = ChapterReadStatusResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public ChapterReadStatusResponse isChapterRead(
@@ -192,6 +202,7 @@ public class ChapterController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Next chapter",
                     content = @Content(schema = @Schema(implementation = NextChapterResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public NextChapterResponse getNextUnreadChapter(

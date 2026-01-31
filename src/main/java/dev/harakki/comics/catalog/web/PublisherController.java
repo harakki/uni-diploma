@@ -50,6 +50,8 @@ class PublisherController {
             @ApiResponse(responseCode = "201", description = "Publisher created",
                     content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
     @PostMapping
@@ -67,6 +69,8 @@ class PublisherController {
             @ApiResponse(responseCode = "200", description = "Publisher updated",
                     content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     @PutMapping("/{id}")
@@ -119,6 +123,11 @@ class PublisherController {
             summary = "Search and filter publishers",
             description = "Retrieves publishers with optional filtering."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page of publishers",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest")
+    })
     @Parameters({
             @Parameter(name = "search", description = "Search by name or slug", example = "shueisha"),
             @Parameter(name = "country", description = "Filter by Country ISO Code", example = "JP")
@@ -145,6 +154,8 @@ class PublisherController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Publisher deleted"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     @DeleteMapping("/{id}")
@@ -165,6 +176,8 @@ class PublisherController {
             @ApiResponse(responseCode = "200", description = "Slug updated",
                     content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })

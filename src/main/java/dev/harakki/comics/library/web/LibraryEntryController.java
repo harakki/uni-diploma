@@ -52,6 +52,7 @@ class LibraryEntryController {
             @ApiResponse(responseCode = "201", description = "Title added to library",
                     content = @Content(schema = @Schema(implementation = LibraryEntryResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
     public LibraryEntryResponse addToLibrary(@RequestBody @Valid LibraryEntryCreateRequest request) {
@@ -68,6 +69,8 @@ class LibraryEntryController {
             @ApiResponse(responseCode = "200", description = "Library entry updated",
                     content = @Content(schema = @Schema(implementation = LibraryEntryResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public LibraryEntryResponse updateEntry(
@@ -87,6 +90,8 @@ class LibraryEntryController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Title removed from library"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void removeFromLibrary(
@@ -105,6 +110,7 @@ class LibraryEntryController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Library entry found",
                     content = @Content(schema = @Schema(implementation = LibraryEntryResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public LibraryEntryResponse getEntry(
@@ -123,6 +129,7 @@ class LibraryEntryController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Library entry found",
                     content = @Content(schema = @Schema(implementation = LibraryEntryResponse.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public LibraryEntryResponse getByTitleId(
@@ -138,6 +145,11 @@ class LibraryEntryController {
             summary = "Get my library",
             description = "Retrieve the authenticated user's library with optional filters."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Library entries retrieved",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized")
+    })
     @Parameters({
             @Parameter(name = "status", description = "Filter by reading status", example = "READING")
     })
@@ -156,6 +168,11 @@ class LibraryEntryController {
             summary = "Get library by status",
             description = "Filter library entries by reading status."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Library entries retrieved",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized")
+    })
     public Page<LibraryEntryResponse> getByStatus(
             @Parameter(description = "Reading status", required = true)
             @PathVariable ReadingStatus status,
@@ -170,6 +187,12 @@ class LibraryEntryController {
             summary = "Get user's public library",
             description = "View another user's library entries."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Library entries retrieved",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
+            @ApiResponse(responseCode = "404", ref = "NotFound")
+    })
     public Page<LibraryEntryResponse> getUserLibrary(
             @Parameter(description = "User UUID", required = true)
             @PathVariable UUID userId,

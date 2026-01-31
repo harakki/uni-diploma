@@ -36,7 +36,9 @@ class MediaController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Presigned URL generated",
                     content = @Content(schema = @Schema(implementation = MediaUploadUrlResponse.class))),
-            @ApiResponse(responseCode = "400", ref = "BadRequest")
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden")
     })
     public MediaUploadUrlResponse createMedia(@RequestBody @Valid MediaUploadUrlRequest request) {
         return mediaService.getUploadUrl(request.originalFilename(), request.contentType(), request.width(), request.height());
@@ -70,6 +72,8 @@ class MediaController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Media deleted"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void deleteMedia(

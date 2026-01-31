@@ -44,6 +44,8 @@ class TagController {
             @ApiResponse(responseCode = "201", description = "Tag created",
                     content = @Content(schema = @Schema(implementation = TagResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
     public TagResponse createTag(@RequestBody @Valid TagCreateRequest request) {
@@ -60,6 +62,8 @@ class TagController {
             @ApiResponse(responseCode = "200", description = "Tag updated",
                     content = @Content(schema = @Schema(implementation = TagResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public TagResponse updateTag(
@@ -112,6 +116,11 @@ class TagController {
             summary = "Get all tags",
             description = "Paginated list of tags."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page of tags",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "400", ref = "BadRequest")
+    })
     public Page<TagResponse> getAllTags(
             @ParameterObject @PageableDefault(sort = "name") Pageable pageable
     ) {
@@ -127,6 +136,8 @@ class TagController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Tag deleted"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     public void deleteTag(
@@ -146,6 +157,8 @@ class TagController {
             @ApiResponse(responseCode = "200", description = "Slug updated",
                     content = @Content(schema = @Schema(implementation = TagResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })

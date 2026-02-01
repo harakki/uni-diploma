@@ -2,11 +2,14 @@ services:
   postgres:
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
+      - 'POSTGRES_DB=comics-db'
       - 'POSTGRES_USER=myuser'
+      - 'POSTGRES_PASSWORD=secret'
     ports:
       - '5432:5432'
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres_data:/var/lib/postgresql
 
   minio:
     image: 'minio/minio:latest'
@@ -34,12 +37,24 @@ services:
   keycloak:
     image: 'quay.io/keycloak/keycloak:latest'
     environment:
+      # Base configuration
       - 'KC_BOOTSTRAP_ADMIN_USERNAME=admin'
       - 'KC_BOOTSTRAP_ADMIN_PASSWORD=admin'
       - 'KC_HTTP_PORT=8081'
+      # Database configuration
+      - 'KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak'
+      - 'KC_DB=postgres'
+      - 'KC_DB_USERNAME=myuser'
+      - 'KC_DB_PASSWORD=secret'
     command: start-dev
     ports:
       - '8081:8081'
+    depends_on:
+      - postgres
+    volumes:
+      - keycloak_data:/opt/keycloak/data
 
 volumes:
+  postgres_data:
   minio_data:
+  keycloak_data:

@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -35,6 +36,7 @@ class TagController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "createTag",
             summary = "Create tag",
@@ -53,6 +55,7 @@ class TagController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateTag",
             summary = "Update tag",
@@ -129,6 +132,7 @@ class TagController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "deleteTag",
             summary = "Delete tag",
@@ -148,6 +152,7 @@ class TagController {
     }
 
     @PutMapping("/{id}/slug")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateTagSlug",
             summary = "Update slug",

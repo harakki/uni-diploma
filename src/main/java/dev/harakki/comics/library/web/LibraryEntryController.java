@@ -28,6 +28,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -43,6 +44,7 @@ class LibraryEntryController {
 
     @PostMapping("/entries")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "addToLibrary",
             summary = "Add title to library",
@@ -60,6 +62,7 @@ class LibraryEntryController {
     }
 
     @PutMapping("/entries/{id}")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "updateLibraryEntry",
             summary = "Update library entry",
@@ -83,6 +86,7 @@ class LibraryEntryController {
 
     @DeleteMapping("/entries/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "removeFromLibrary",
             summary = "Remove from library",
@@ -140,6 +144,7 @@ class LibraryEntryController {
     }
 
     @GetMapping("/entries")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "getMyLibrary",
             summary = "Get my library",

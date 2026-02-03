@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class ChapterController {
 
     @PostMapping("/titles/{titleId}/chapters")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "createChapter",
             summary = "Create chapter",
@@ -86,6 +88,7 @@ public class ChapterController {
     }
 
     @PutMapping("/chapters/{chapterId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateChapter",
             summary = "Update chapter info",
@@ -108,6 +111,7 @@ public class ChapterController {
 
     @DeleteMapping("/chapters/{chapterId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "deleteChapter",
             summary = "Delete chapter",
@@ -128,6 +132,7 @@ public class ChapterController {
 
     @PutMapping("/chapters/{chapterId}/pages")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateChapterPages",
             summary = "Update pages order/content",
@@ -149,6 +154,7 @@ public class ChapterController {
     }
 
     @PostMapping("/titles/{titleId}/chapters/{chapterId}/read")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "recordChapterRead",
             summary = "Record chapter read",
@@ -171,6 +177,7 @@ public class ChapterController {
     }
 
     @GetMapping("/titles/{titleId}/chapters/{chapterId}/read")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "isChapterRead",
             summary = "Check if chapter is read",
@@ -194,6 +201,7 @@ public class ChapterController {
     }
 
     @GetMapping("/users/{userId}/titles/{titleId}/next-chapter")
+    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "getNextUnreadChapter",
             summary = "Get next unread chapter",

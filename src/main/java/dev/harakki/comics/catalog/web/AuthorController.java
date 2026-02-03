@@ -29,6 +29,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -56,6 +57,7 @@ class AuthorController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public AuthorResponse createAuthor(@RequestBody @Valid AuthorCreateRequest request) {
         return authorService.create(request);
     }
@@ -74,6 +76,7 @@ class AuthorController {
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public AuthorResponse updateAuthor(
             @Parameter(description = "Author UUID", required = true)
             @PathVariable UUID id,
@@ -160,6 +163,7 @@ class AuthorController {
     })
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteAuthor(
             @Parameter(description = "Author UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -182,6 +186,7 @@ class AuthorController {
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
     @PutMapping("/{id}/slug")
+    @PreAuthorize("hasRole('ADMIN')")
     public AuthorResponse updateAuthorSlug(
             @Parameter(description = "Author UUID", required = true)
             @PathVariable @NotNull UUID id,

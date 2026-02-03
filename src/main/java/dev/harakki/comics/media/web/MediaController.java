@@ -15,6 +15,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -28,6 +29,7 @@ class MediaController {
     private final MediaService mediaService;
 
     @PostMapping("/upload-url")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "generateUploadUrl",
             summary = "Generate Upload Presigned URL",
@@ -65,6 +67,7 @@ class MediaController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "deleteMedia",
             summary = "Delete media",

@@ -28,6 +28,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -42,6 +43,7 @@ class TitleController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "createTitle",
             summary = "Create title",
@@ -60,6 +62,7 @@ class TitleController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateTitle",
             summary = "Update title",
@@ -163,6 +166,7 @@ class TitleController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             operationId = "deleteTitle",
@@ -183,6 +187,7 @@ class TitleController {
     }
 
     @PutMapping("/{id}/slug")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateTitleSlug",
             summary = "Update slug",
@@ -206,6 +211,7 @@ class TitleController {
     }
 
     @PostMapping("/{id}/authors")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "addAuthorToTitle",
             summary = "Add author",
@@ -228,6 +234,7 @@ class TitleController {
     }
 
     @DeleteMapping("/{id}/authors/{authorId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "removeAuthorFromTitle",
             summary = "Remove author",
@@ -250,6 +257,7 @@ class TitleController {
     }
 
     @DeleteMapping("/{id}/publisher")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "removePublisherFromTitle",
             summary = "Remove publisher",
@@ -270,6 +278,7 @@ class TitleController {
     }
 
     @PostMapping("/{id}/tags")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "replaceTitleTags",
             summary = "Replace tags",

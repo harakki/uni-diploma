@@ -6,12 +6,14 @@ import dev.harakki.comics.catalog.domain.TitleStatus;
 import dev.harakki.comics.catalog.domain.TitleType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
 import java.time.Year;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+@Builder
 public record TitleCreateRequest(
         @NotBlank String name,
         String description,

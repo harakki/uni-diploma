@@ -36,12 +36,12 @@ import java.util.*;
 public class TitleService {
 
     private final TitleRepository titleRepository;
+    private final TitleMapper titleMapper;
+
     private final PublisherRepository publisherRepository;
     private final TagRepository tagRepository;
     private final AuthorRepository authorRepository;
-    private final TitleAuthorRepository titleAuthorRepository;
 
-    private final TitleMapper titleMapper;
     private final SlugGenerator slugGenerator;
 
     private final ApplicationEventPublisher eventPublisher;

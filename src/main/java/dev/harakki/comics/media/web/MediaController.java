@@ -22,14 +22,16 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = "/api/v1/media", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = MediaController.REQUEST_MAPPING, produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Media", description = "S3 Object Storage management via Presigned URLs.")
 class MediaController {
 
+    static final String REQUEST_MAPPING = "/api/v1/media";
+
+    static final String BY_ID = "/{id}";
+
     private final MediaService mediaService;
 
-    @PostMapping("/upload-url")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "generateUploadUrl",
             summary = "Generate Upload Presigned URL",
@@ -42,12 +44,12 @@ class MediaController {
             @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "403", ref = "Forbidden")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/upload-url")
     public MediaUploadUrlResponse createMedia(@RequestBody @Valid MediaUploadUrlRequest request) {
         return mediaService.getUploadUrl(request.originalFilename(), request.contentType(), request.width(), request.height());
     }
 
-    @GetMapping("/{id}/url")
-    @ResponseStatus(HttpStatus.OK)
     @Operation(
             operationId = "getMediaUrl",
             summary = "Get Download Presigned URL",
@@ -58,6 +60,8 @@ class MediaController {
                     content = @Content(schema = @Schema(type = "string", example = "https://s3.aws.com/bucket/uploads/uuid/cover.jpg?signature=..."))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping(BY_ID + "/url")
+    @ResponseStatus(HttpStatus.OK)
     public String getMediaUrl(
             @Parameter(description = "Media UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -65,9 +69,6 @@ class MediaController {
         return mediaService.getPublicUrl(id);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "deleteMedia",
             summary = "Delete media",
@@ -79,6 +80,9 @@ class MediaController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(BY_ID)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMedia(
             @Parameter(description = "Media UUID", required = true)
             @PathVariable @NotNull UUID id

@@ -20,9 +20,13 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = "/api/v1/analytics", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = AnalyticsController.REQUEST_MAPPING, produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Analytics", description = "Analytics API for reading statistics, ratings, and preferences.")
 public class AnalyticsController {
+
+    static final String REQUEST_MAPPING = "/api/v1/analytics";
+
+    static final String BY_TITLE_ID = "/titles/{titleId}";
 
     private final AnalyticsService analyticsService;
 
@@ -36,7 +40,7 @@ public class AnalyticsController {
                     content = @Content(schema = @Schema(implementation = TitleAnalyticsResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    @GetMapping("/titles/{titleId}")
+    @GetMapping(BY_TITLE_ID)
     public TitleAnalyticsResponse getTitleAnalytics(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable UUID titleId

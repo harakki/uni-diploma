@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -30,15 +29,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MediaService implements MediaUrlProvider {
 
+    private static final long MEDIA_URL_EXPIRATION_MINUTES = 2 * 60L;
+    private static final long UPLOAD_MEDIA_URL_EXPIRATION_MINUTES = 15L;
+
     private final MediaRepository mediaRepository;
 
     private final S3Presigner s3Presigner;
-    private final S3Client s3Client;
 
     private final ApplicationEventPublisher eventPublisher;
-
-    private static final long MEDIA_URL_EXPIRATION_MINUTES = 2 * 60L;
-    private static final long UPLOAD_MEDIA_URL_EXPIRATION_MINUTES = 15L;
 
     @Value("${s3.bucket}")
     private String bucket;

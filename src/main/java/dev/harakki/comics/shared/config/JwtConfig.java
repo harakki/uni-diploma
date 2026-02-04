@@ -38,6 +38,7 @@ public class JwtConfig {
             return List.of();
         }
 
+        @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) realmAccess.get("roles");
         if (roles == null) {
             return List.of();

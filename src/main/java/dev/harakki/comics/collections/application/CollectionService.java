@@ -31,24 +31,25 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class CollectionService {
 
-    private final CollectionRepository repository;
-    private final CollectionMapper mapper;
+    private final CollectionRepository collectionRepository;
+    private final CollectionMapper collectionMapper;
+
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public UserCollectionResponse create(CollectionCreateRequest request) {
         UUID currentUserId = getCurrentUserId();
 
-        if (repository.existsByAuthorIdAndName(currentUserId, request.name())) {
+        if (collectionRepository.existsByAuthorIdAndName(currentUserId, request.name())) {
             throw new ResourceAlreadyExistsException("Collection with name '" + request.name() + "' already exists");
         }
 
-        var entity = mapper.toEntity(request);
+        var entity = collectionMapper.toEntity(request);
         entity.setAuthorId(currentUserId);
 
         try {
-            entity = repository.save(entity);
-            repository.flush();
+            entity = collectionRepository.save(entity);
+            collectionRepository.flush();
             log.info("Created collection {} by user {}", entity.getId(), currentUserId);
 
             eventPublisher.publishEvent(new CollectionCreatedEvent(
@@ -60,43 +61,43 @@ public class CollectionService {
             throw new RuntimeException("Failed to create collection: " + e.getMessage());
         }
 
-        return mapper.toResponse(entity);
+        return collectionMapper.toResponse(entity);
     }
 
     public UserCollectionResponse getById(UUID id) {
         UUID currentUserId = getCurrentUserId();
 
-        var entity = repository.findById(id)
+        var entity = collectionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getIsPublic() && !entity.getAuthorId().equals(currentUserId)) {
             throw new AccessDeniedException("Collection is private");
         }
 
-        return mapper.toResponse(entity);
+        return collectionMapper.toResponse(entity);
     }
 
     public Page<UserCollectionResponse> search(String search, Pageable pageable) {
         if (search == null) search = "";
-        return repository.findByIsPublicTrueAndNameContainingIgnoreCase(search, pageable)
-                .map(mapper::toResponse);
+        return collectionRepository.findByIsPublicTrueAndNameContainingIgnoreCase(search, pageable)
+                .map(collectionMapper::toResponse);
     }
 
     public Page<UserCollectionResponse> getMyCollections(String search, Pageable pageable) {
         UUID currentUserId = getCurrentUserId();
         if (search == null || search.isBlank()) {
-            return repository.findByAuthorId(currentUserId, pageable)
-                    .map(mapper::toResponse);
+            return collectionRepository.findByAuthorId(currentUserId, pageable)
+                    .map(collectionMapper::toResponse);
         }
-        return repository.findByAuthorIdAndNameContainingIgnoreCase(currentUserId, search, pageable)
-                .map(mapper::toResponse);
+        return collectionRepository.findByAuthorIdAndNameContainingIgnoreCase(currentUserId, search, pageable)
+                .map(collectionMapper::toResponse);
     }
 
     @Transactional
     public UserCollectionResponse update(UUID id, CollectionUpdateRequest request) {
         UUID currentUserId = getCurrentUserId();
 
-        var entity = repository.findById(id)
+        var entity = collectionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getAuthorId().equals(currentUserId)) {
@@ -105,33 +106,33 @@ public class CollectionService {
 
         // Check if new name already exists (and it's different from current)
         if (request.name() != null && !request.name().equals(entity.getName())) {
-            if (repository.existsByAuthorIdAndNameAndIdNot(currentUserId, request.name(), id)) {
+            if (collectionRepository.existsByAuthorIdAndNameAndIdNot(currentUserId, request.name(), id)) {
                 throw new ResourceAlreadyExistsException("Collection with name '" + request.name() + "' already exists");
             }
         }
 
-        entity = mapper.partialUpdate(request, entity);
+        entity = collectionMapper.partialUpdate(request, entity);
 
-        entity = repository.save(entity);
+        entity = collectionRepository.save(entity);
 
         eventPublisher.publishEvent(new CollectionUpdatedEvent(entity.getId(), currentUserId));
 
         log.debug("Updated collection: id={}", id);
-        return mapper.toResponse(entity);
+        return collectionMapper.toResponse(entity);
     }
 
     @Transactional
     public void delete(UUID id) {
         UUID currentUserId = getCurrentUserId();
 
-        var entity = repository.findById(id)
+        var entity = collectionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getAuthorId().equals(currentUserId)) {
             throw new AccessDeniedException("You don't have permission to delete this collection");
         }
 
-        repository.delete(entity);
+        collectionRepository.delete(entity);
 
         eventPublisher.publishEvent(new CollectionDeletedEvent(entity.getId(), currentUserId));
 
@@ -142,7 +143,7 @@ public class CollectionService {
     public UserCollectionResponse generateShareToken(UUID id) {
         UUID currentUserId = getCurrentUserId();
 
-        var entity = repository.findById(id)
+        var entity = collectionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getAuthorId().equals(currentUserId)) {
@@ -152,15 +153,15 @@ public class CollectionService {
         // Generate a unique token
         String token = generateUniqueToken();
         entity.setShareToken(token);
-        entity = repository.save(entity);
+        entity = collectionRepository.save(entity);
 
         log.info("Generated share token for collection: id={} by user {}", id, currentUserId);
-        return mapper.toResponse(entity);
+        return collectionMapper.toResponse(entity);
     }
 
     public UserCollectionResponse getByShareToken(String shareToken) {
-        return repository.findByShareToken(shareToken)
-                .map(mapper::toResponse)
+        return collectionRepository.findByShareToken(shareToken)
+                .map(collectionMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found or link expired"));
     }
 
@@ -168,7 +169,7 @@ public class CollectionService {
     public UserCollectionResponse revokeShareToken(UUID id) {
         UUID currentUserId = getCurrentUserId();
 
-        var entity = repository.findById(id)
+        var entity = collectionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection not found"));
 
         if (!entity.getAuthorId().equals(currentUserId)) {
@@ -176,10 +177,10 @@ public class CollectionService {
         }
 
         entity.setShareToken(null);
-        entity = repository.save(entity);
+        entity = collectionRepository.save(entity);
 
         log.info("Revoked share token for collection: id={} by user {}", id, currentUserId);
-        return mapper.toResponse(entity);
+        return collectionMapper.toResponse(entity);
     }
 
     public UserCollectionResponse addTitles(UUID id, List<UUID> titleIds) {
@@ -226,7 +227,7 @@ public class CollectionService {
         do {
             random.nextBytes(bytes);
             token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        } while (repository.existsByShareToken(token));
+        } while (collectionRepository.existsByShareToken(token));
         return token;
     }
 

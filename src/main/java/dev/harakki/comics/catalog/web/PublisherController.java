@@ -36,9 +36,14 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = "/api/v1/publishers", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = PublisherController.REQUEST_MAPPING, produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Publishers", description = "Management of publishing houses.")
 class PublisherController {
+
+    static final String REQUEST_MAPPING = "/api/v1/publishers";
+
+    static final String BY_ID = "/{id}";
+    static final String BY_SLUG = "/slug/{slug}";
 
     private final PublisherService publisherService;
 
@@ -55,9 +60,9 @@ class PublisherController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
     public PublisherResponse createPublisher(@RequestBody @Valid PublisherCreateRequest request) {
         return publisherService.create(request);
     }
@@ -75,8 +80,8 @@ class PublisherController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(BY_ID)
     public PublisherResponse updatePublisher(
             @Parameter(description = "Publisher UUID", required = true)
             @PathVariable @NotNull UUID id,
@@ -95,7 +100,7 @@ class PublisherController {
                     content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    @GetMapping("/{id}")
+    @GetMapping(BY_ID)
     public PublisherResponse getPublisher(
             @Parameter(description = "Publisher UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -113,7 +118,7 @@ class PublisherController {
                     content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    @GetMapping("/slug/{slug}")
+    @GetMapping(BY_SLUG)
     public PublisherResponse getPublisherBySlug(
             @Parameter(description = "URL slug", example = "shueisha", required = true)
             @PathVariable @NotNull String slug
@@ -128,14 +133,14 @@ class PublisherController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Page of publishers",
-                    content = @Content(schema = @Schema(implementation = Page.class))),
+                    content = @Content(schema = @Schema(implementation = PublisherResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest")
     })
+    @GetMapping
     @Parameters({
             @Parameter(name = "search", description = "Search by name or slug", example = "shueisha"),
             @Parameter(name = "country", description = "Filter by Country ISO Code", example = "JP")
     })
-    @GetMapping
     public Page<PublisherResponse> getAllPublishers(
             @Or({
                     @Spec(path = "name", params = "search", spec = LikeIgnoreCase.class),
@@ -161,9 +166,9 @@ class PublisherController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(BY_ID)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePublisher(
             @Parameter(description = "Publisher UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -185,8 +190,8 @@ class PublisherController {
             @ApiResponse(responseCode = "404", ref = "NotFound"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
-    @PutMapping("/{id}/slug")
     @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(BY_ID + "/slug")
     public PublisherResponse updatePublisherSlug(
             @Parameter(description = "Publisher UUID", required = true)
             @PathVariable @NotNull UUID id,

@@ -1,7 +1,7 @@
 package dev.harakki.comics.library.web;
 
 import dev.harakki.comics.library.api.VoteType;
-import dev.harakki.comics.library.application.LibraryEntryService;
+import dev.harakki.comics.library.application.LibraryService;
 import dev.harakki.comics.library.domain.ReadingStatus;
 import dev.harakki.comics.library.dto.LibraryEntryCreateRequest;
 import dev.harakki.comics.library.dto.LibraryEntryResponse;
@@ -35,9 +35,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(LibraryEntryController.class)
+@WebMvcTest(LibraryController.class)
 @Import(SecurityConfig.class)
-class LibraryEntryControllerTest {
+class LibraryControllerTest {
 
     @MockitoBean
     JwtAuthenticationConverter jwtAuthenticationConverter;
@@ -52,7 +52,7 @@ class LibraryEntryControllerTest {
     JsonMapper jsonMapper;
 
     @MockitoBean
-    LibraryEntryService libraryEntryService;
+    LibraryService libraryService;
 
     LibraryEntryCreateRequest createRequest;
 
@@ -69,7 +69,7 @@ class LibraryEntryControllerTest {
     void addToLibrary_created() throws Exception {
         UUID entryId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        when(libraryEntryService.addToLibrary(any(LibraryEntryCreateRequest.class)))
+        when(libraryService.addToLibrary(any(LibraryEntryCreateRequest.class)))
                 .thenReturn(new LibraryEntryResponse(entryId, userId, createRequest.titleId(),
                         ReadingStatus.READING, VoteType.LIKE, null, Instant.now(), Instant.now()));
 
@@ -90,7 +90,7 @@ class LibraryEntryControllerTest {
 
     @Test
     void addToLibrary_conflict() throws Exception {
-        when(libraryEntryService.addToLibrary(any(LibraryEntryCreateRequest.class)))
+        when(libraryService.addToLibrary(any(LibraryEntryCreateRequest.class)))
                 .thenThrow(new ResourceAlreadyExistsException("Title already in library"));
 
         mockMvc.perform(post("/api/v1/library/entries")
@@ -108,7 +108,7 @@ class LibraryEntryControllerTest {
         UUID userId = UUID.randomUUID();
         var updateRequest = new LibraryEntryUpdateRequest(ReadingStatus.COMPLETED, VoteType.LIKE, null);
 
-        when(libraryEntryService.update(eq(entryId), any(LibraryEntryUpdateRequest.class)))
+        when(libraryService.update(eq(entryId), any(LibraryEntryUpdateRequest.class)))
                 .thenReturn(new LibraryEntryResponse(entryId, userId, UUID.randomUUID(),
                         ReadingStatus.COMPLETED, VoteType.LIKE, null, Instant.now(), Instant.now()));
 
@@ -124,7 +124,7 @@ class LibraryEntryControllerTest {
         UUID entryId = UUID.randomUUID();
         var updateRequest = new LibraryEntryUpdateRequest(ReadingStatus.COMPLETED, VoteType.LIKE, null);
 
-        when(libraryEntryService.update(eq(entryId), any(LibraryEntryUpdateRequest.class)))
+        when(libraryService.update(eq(entryId), any(LibraryEntryUpdateRequest.class)))
                 .thenThrow(new ResourceNotFoundException("Entry not found"));
 
         mockMvc.perform(put("/api/v1/library/entries/{id}", entryId)
@@ -150,7 +150,7 @@ class LibraryEntryControllerTest {
         UUID entryId = UUID.randomUUID();
         var updateRequest = new LibraryEntryUpdateRequest(ReadingStatus.COMPLETED, VoteType.LIKE, null);
 
-        when(libraryEntryService.update(eq(entryId), any(LibraryEntryUpdateRequest.class)))
+        when(libraryService.update(eq(entryId), any(LibraryEntryUpdateRequest.class)))
                 .thenThrow(new AccessDeniedException("You don't have permission to update this entry"));
 
         mockMvc.perform(put("/api/v1/library/entries/{id}", entryId)
@@ -175,7 +175,7 @@ class LibraryEntryControllerTest {
     void removeFromLibrary_notFound() throws Exception {
         UUID entryId = UUID.randomUUID();
         doThrow(new ResourceNotFoundException("Entry not found"))
-                .when(libraryEntryService).removeFromLibrary(eq(entryId));
+                .when(libraryService).removeFromLibrary(eq(entryId));
 
         mockMvc.perform(delete("/api/v1/library/entries/{id}", entryId)
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))))
@@ -194,7 +194,7 @@ class LibraryEntryControllerTest {
     void removeFromLibrary_forbidden() throws Exception {
         UUID entryId = UUID.randomUUID();
         doThrow(new AccessDeniedException("You don't have permission to delete this entry"))
-                .when(libraryEntryService).removeFromLibrary(eq(entryId));
+                .when(libraryService).removeFromLibrary(eq(entryId));
 
         mockMvc.perform(delete("/api/v1/library/entries/{id}", entryId)
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))))
@@ -207,7 +207,7 @@ class LibraryEntryControllerTest {
     void getEntry_ok() throws Exception {
         UUID entryId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        when(libraryEntryService.getById(eq(entryId)))
+        when(libraryService.getById(eq(entryId)))
                 .thenReturn(new LibraryEntryResponse(entryId, userId, UUID.randomUUID(),
                         ReadingStatus.READING, VoteType.LIKE, null, Instant.now(), Instant.now()));
 
@@ -219,7 +219,7 @@ class LibraryEntryControllerTest {
     @Test
     void getEntry_notFound() throws Exception {
         UUID entryId = UUID.randomUUID();
-        when(libraryEntryService.getById(eq(entryId)))
+        when(libraryService.getById(eq(entryId)))
                 .thenThrow(new ResourceNotFoundException("Entry not found"));
 
         mockMvc.perform(get("/api/v1/library/entries/{id}", entryId)
@@ -242,7 +242,7 @@ class LibraryEntryControllerTest {
         UUID titleId = UUID.randomUUID();
         UUID entryId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        when(libraryEntryService.getByTitleId(eq(titleId)))
+        when(libraryService.getByTitleId(eq(titleId)))
                 .thenReturn(new LibraryEntryResponse(entryId, userId, titleId,
                         ReadingStatus.READING, VoteType.LIKE, null, Instant.now(), Instant.now()));
 
@@ -254,7 +254,7 @@ class LibraryEntryControllerTest {
     @Test
     void getByTitleId_notFound() throws Exception {
         UUID titleId = UUID.randomUUID();
-        when(libraryEntryService.getByTitleId(eq(titleId)))
+        when(libraryService.getByTitleId(eq(titleId)))
                 .thenThrow(new ResourceNotFoundException("Entry not found"));
 
         mockMvc.perform(get("/api/v1/library/entries/by-title/{titleId}", titleId)
@@ -274,7 +274,7 @@ class LibraryEntryControllerTest {
 
     @Test
     void getMyLibrary_ok() throws Exception {
-        when(libraryEntryService.searchLibrary(any(), any())).thenReturn(Page.empty());
+        when(libraryService.searchLibrary(any(), any())).thenReturn(Page.empty());
 
         mockMvc.perform(get("/api/v1/library/entries")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))))
@@ -291,7 +291,7 @@ class LibraryEntryControllerTest {
 
     @Test
     void getByStatus_ok() throws Exception {
-        when(libraryEntryService.getMyLibraryByStatus(eq(ReadingStatus.READING), any()))
+        when(libraryService.getMyLibraryByStatus(eq(ReadingStatus.READING), any()))
                 .thenReturn(Page.empty());
 
         mockMvc.perform(get("/api/v1/library/entries/status/{status}", ReadingStatus.READING)
@@ -310,7 +310,7 @@ class LibraryEntryControllerTest {
     @Test
     void getUserLibrary_ok() throws Exception {
         UUID userId = UUID.randomUUID();
-        when(libraryEntryService.getUserLibrary(eq(userId), any())).thenReturn(Page.empty());
+        when(libraryService.getUserLibrary(eq(userId), any())).thenReturn(Page.empty());
 
         mockMvc.perform(get("/api/v1/library/users/{userId}/entries", userId)
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))))
@@ -320,7 +320,7 @@ class LibraryEntryControllerTest {
     @Test
     void getUserLibrary_notFound() throws Exception {
         UUID userId = UUID.randomUUID();
-        when(libraryEntryService.getUserLibrary(eq(userId), any()))
+        when(libraryService.getUserLibrary(eq(userId), any()))
                 .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(get("/api/v1/library/users/{userId}/entries", userId)
@@ -331,7 +331,7 @@ class LibraryEntryControllerTest {
     @Test
     void getUserLibrary_forbidden() throws Exception {
         UUID userId = UUID.randomUUID();
-        when(libraryEntryService.getUserLibrary(eq(userId), any()))
+        when(libraryService.getUserLibrary(eq(userId), any()))
                 .thenThrow(new AccessDeniedException("You don't have permission to view this user's library"));
 
         mockMvc.perform(get("/api/v1/library/users/{userId}/entries", userId)

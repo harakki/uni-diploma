@@ -68,7 +68,8 @@ public class Media implements Persistable<UUID> {
     }
 
     @PostLoad // After loading from DB
-    @PostPersist // After saving to DB
+    @PostPersist
+        // After saving to DB
     void markNotNew() {
         this.isNew = false;
     }

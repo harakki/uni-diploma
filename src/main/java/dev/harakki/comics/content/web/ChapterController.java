@@ -22,15 +22,14 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = "/api/v1/", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = ChapterController.REQUEST_MAPPING, produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Chapters", description = "Management of comic chapters.")
 public class ChapterController {
 
+    static final String REQUEST_MAPPING = "/api/v1/";
+
     private final ChapterService chapterService;
 
-    @PostMapping("/titles/{titleId}/chapters")
-    @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "createChapter",
             summary = "Create chapter",
@@ -43,6 +42,9 @@ public class ChapterController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/titles/{titleId}/chapters")
+    @ResponseStatus(HttpStatus.CREATED)
     public void createChapter(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable UUID titleId,
@@ -51,7 +53,6 @@ public class ChapterController {
         chapterService.create(titleId, request);
     }
 
-    @GetMapping("/titles/{titleId}/chapters")
     @Operation(
             operationId = "getTitleChapters",
             summary = "Get title chapters",
@@ -62,6 +63,7 @@ public class ChapterController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ChapterSummaryResponse.class)))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping("/titles/{titleId}/chapters")
     public List<ChapterSummaryResponse> getTitleChapters(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable UUID titleId
@@ -69,7 +71,6 @@ public class ChapterController {
         return chapterService.getChaptersByTitle(titleId);
     }
 
-    @GetMapping("/chapters/{chapterId}")
     @Operation(
             operationId = "getChapterDetails",
             summary = "Get specific chapter content",
@@ -80,6 +81,7 @@ public class ChapterController {
                     content = @Content(schema = @Schema(implementation = ChapterDetailsResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping("/chapters/{chapterId}")
     public ChapterDetailsResponse getChapterDetails(
             @Parameter(description = "Chapter UUID", required = true)
             @PathVariable UUID chapterId
@@ -87,8 +89,6 @@ public class ChapterController {
         return chapterService.getChapterDetails(chapterId);
     }
 
-    @PutMapping("/chapters/{chapterId}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateChapter",
             summary = "Update chapter info",
@@ -101,6 +101,8 @@ public class ChapterController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/chapters/{chapterId}")
     public void updateChapter(
             @Parameter(description = "Chapter UUID", required = true)
             @PathVariable UUID chapterId,
@@ -109,9 +111,6 @@ public class ChapterController {
         chapterService.updateMetadata(chapterId, request);
     }
 
-    @DeleteMapping("/chapters/{chapterId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "deleteChapter",
             summary = "Delete chapter",
@@ -123,6 +122,9 @@ public class ChapterController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/chapters/{chapterId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteChapter(
             @Parameter(description = "Chapter UUID", required = true)
             @PathVariable UUID chapterId
@@ -130,9 +132,6 @@ public class ChapterController {
         chapterService.delete(chapterId);
     }
 
-    @PutMapping("/chapters/{chapterId}/pages")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateChapterPages",
             summary = "Update pages order/content",
@@ -145,6 +144,9 @@ public class ChapterController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/chapters/{chapterId}/pages")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updatePages(
             @Parameter(description = "Chapter UUID", required = true)
             @PathVariable UUID chapterId,
@@ -153,8 +155,6 @@ public class ChapterController {
         chapterService.updatePages(chapterId, request.pages());
     }
 
-    @PostMapping("/titles/{titleId}/chapters/{chapterId}/read")
-    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "recordChapterRead",
             summary = "Record chapter read",
@@ -166,6 +166,8 @@ public class ChapterController {
             @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/titles/{titleId}/chapters/{chapterId}/read")
     public void recordChapterRead(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable UUID titleId,
@@ -176,8 +178,6 @@ public class ChapterController {
         chapterService.recordChapterRead(chapterId, titleId, request);
     }
 
-    @GetMapping("/titles/{titleId}/chapters/{chapterId}/read")
-    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "isChapterRead",
             summary = "Check if chapter is read",
@@ -189,6 +189,8 @@ public class ChapterController {
             @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/titles/{titleId}/chapters/{chapterId}/read")
     public ChapterReadStatusResponse isChapterRead(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable UUID titleId,
@@ -200,8 +202,6 @@ public class ChapterController {
         return chapterService.isChapterRead(chapterId, titleId, userId);
     }
 
-    @GetMapping("/users/{userId}/titles/{titleId}/next-chapter")
-    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "getNextUnreadChapter",
             summary = "Get next unread chapter",
@@ -213,6 +213,8 @@ public class ChapterController {
             @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/users/{userId}/titles/{titleId}/next-chapter")
     public NextChapterResponse getNextUnreadChapter(
             @Parameter(description = "User UUID", required = true)
             @PathVariable UUID userId,

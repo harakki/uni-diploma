@@ -1,6 +1,6 @@
 package dev.harakki.comics.library.web;
 
-import dev.harakki.comics.library.application.LibraryEntryService;
+import dev.harakki.comics.library.application.LibraryService;
 import dev.harakki.comics.library.domain.LibraryEntry;
 import dev.harakki.comics.library.domain.ReadingStatus;
 import dev.harakki.comics.library.dto.LibraryEntryCreateRequest;
@@ -35,16 +35,15 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = "/api/v1/library", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = LibraryController.REQUEST_MAPPING, produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Library", description = "User's personal library management")
 @SecurityRequirement(name = "bearer-jwt")
-class LibraryEntryController {
+class LibraryController {
 
-    private final LibraryEntryService libraryEntryService;
+    static final String REQUEST_MAPPING = "/api/v1/library";
 
-    @PostMapping("/entries")
-    @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('USER')")
+    private final LibraryService libraryService;
+
     @Operation(
             operationId = "addToLibrary",
             summary = "Add title to library",
@@ -57,12 +56,13 @@ class LibraryEntryController {
             @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/entries")
+    @ResponseStatus(HttpStatus.CREATED)
     public LibraryEntryResponse addToLibrary(@RequestBody @Valid LibraryEntryCreateRequest request) {
-        return libraryEntryService.addToLibrary(request);
+        return libraryService.addToLibrary(request);
     }
 
-    @PutMapping("/entries/{id}")
-    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "updateLibraryEntry",
             summary = "Update library entry",
@@ -76,17 +76,16 @@ class LibraryEntryController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/entries/{id}")
     public LibraryEntryResponse updateEntry(
             @Parameter(description = "Library entry UUID", required = true)
             @PathVariable UUID id,
             @RequestBody @Valid LibraryEntryUpdateRequest request
     ) {
-        return libraryEntryService.update(id, request);
+        return libraryService.update(id, request);
     }
 
-    @DeleteMapping("/entries/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "removeFromLibrary",
             summary = "Remove from library",
@@ -98,14 +97,16 @@ class LibraryEntryController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('USER')")
+    @DeleteMapping("/entries/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeFromLibrary(
             @Parameter(description = "Library entry UUID", required = true)
             @PathVariable UUID id
     ) {
-        libraryEntryService.removeFromLibrary(id);
+        libraryService.removeFromLibrary(id);
     }
 
-    @GetMapping("/entries/{id}")
     @Operation(
             operationId = "getLibraryEntryById",
             summary = "Get library entry by ID",
@@ -117,14 +118,14 @@ class LibraryEntryController {
             @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping("/entries/{id}")
     public LibraryEntryResponse getEntry(
             @Parameter(description = "Library entry UUID", required = true)
             @PathVariable @NotNull UUID id
     ) {
-        return libraryEntryService.getById(id);
+        return libraryService.getById(id);
     }
 
-    @GetMapping("/entries/by-title/{titleId}")
     @Operation(
             operationId = "getLibraryEntryByTitleId",
             summary = "Get library entry by title",
@@ -136,15 +137,14 @@ class LibraryEntryController {
             @ApiResponse(responseCode = "401", ref = "Unauthorized"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping("/entries/by-title/{titleId}")
     public LibraryEntryResponse getByTitleId(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID titleId
     ) {
-        return libraryEntryService.getByTitleId(titleId);
+        return libraryService.getByTitleId(titleId);
     }
 
-    @GetMapping("/entries")
-    @PreAuthorize("hasRole('USER')")
     @Operation(
             operationId = "getMyLibrary",
             summary = "Get my library",
@@ -155,6 +155,8 @@ class LibraryEntryController {
                     content = @Content(schema = @Schema(implementation = Page.class))),
             @ApiResponse(responseCode = "401", ref = "Unauthorized")
     })
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/entries")
     @Parameters({
             @Parameter(name = "status", description = "Filter by reading status", example = "READING")
     })
@@ -164,10 +166,9 @@ class LibraryEntryController {
             }) @Parameter(hidden = true) Specification<LibraryEntry> spec,
             @ParameterObject @PageableDefault(sort = "updatedAt") Pageable pageable
     ) {
-        return libraryEntryService.searchLibrary(spec, pageable);
+        return libraryService.searchLibrary(spec, pageable);
     }
 
-    @GetMapping("/entries/status/{status}")
     @Operation(
             operationId = "getLibraryByStatus",
             summary = "Get library by status",
@@ -178,15 +179,15 @@ class LibraryEntryController {
                     content = @Content(schema = @Schema(implementation = Page.class))),
             @ApiResponse(responseCode = "401", ref = "Unauthorized")
     })
+    @GetMapping("/entries/status/{status}")
     public Page<LibraryEntryResponse> getByStatus(
             @Parameter(description = "Reading status", required = true)
             @PathVariable ReadingStatus status,
             @ParameterObject @PageableDefault(sort = "updatedAt") Pageable pageable
     ) {
-        return libraryEntryService.getMyLibraryByStatus(status, pageable);
+        return libraryService.getMyLibraryByStatus(status, pageable);
     }
 
-    @GetMapping("/users/{userId}/entries")
     @Operation(
             operationId = "getUserLibrary",
             summary = "Get user's public library",
@@ -198,12 +199,13 @@ class LibraryEntryController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping("/users/{userId}/entries")
     public Page<LibraryEntryResponse> getUserLibrary(
             @Parameter(description = "User UUID", required = true)
             @PathVariable UUID userId,
             @ParameterObject @PageableDefault(sort = "updatedAt") Pageable pageable
     ) {
-        return libraryEntryService.getUserLibrary(userId, pageable);
+        return libraryService.getUserLibrary(userId, pageable);
     }
 
 }

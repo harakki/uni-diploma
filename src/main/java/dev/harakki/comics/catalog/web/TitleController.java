@@ -35,15 +35,17 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = "/api/v1/titles", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = TitleController.REQUEST_MAPPING, produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Titles", description = "Management of comic titles")
 class TitleController {
 
+    static final String REQUEST_MAPPING = "/api/v1/titles";
+
+    static final String BY_ID = "/{id}";
+    static final String BY_SLUG = "/slug/{slug}";
+
     private final TitleService titleService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "createTitle",
             summary = "Create title",
@@ -57,12 +59,13 @@ class TitleController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public TitleResponse createTitle(@RequestBody @Valid TitleCreateRequest request) {
         return titleService.create(request);
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateTitle",
             summary = "Update title",
@@ -76,6 +79,8 @@ class TitleController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(BY_ID)
     public TitleResponse updateTitle(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,
@@ -84,7 +89,6 @@ class TitleController {
         return titleService.update(id, request);
     }
 
-    @GetMapping("/{id}")
     @Operation(
             operationId = "getTitleById",
             summary = "Get title by ID",
@@ -95,6 +99,7 @@ class TitleController {
                     content = @Content(schema = @Schema(implementation = TitleResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping(BY_ID)
     public TitleResponse getTitle(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -102,7 +107,6 @@ class TitleController {
         return titleService.getById(id);
     }
 
-    @GetMapping("/slug/{slug}")
     @Operation(
             operationId = "getTitleBySlug",
             summary = "Get title by slug",
@@ -113,6 +117,7 @@ class TitleController {
                     content = @Content(schema = @Schema(implementation = TitleResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping(BY_SLUG)
     public TitleResponse getTitleBySlug(
             @Parameter(description = "URL slug", example = "chainsaw-man", required = true)
             @PathVariable @NotNull String slug
@@ -120,7 +125,6 @@ class TitleController {
         return titleService.getBySlug(slug);
     }
 
-    @GetMapping
     @Operation(
             operationId = "searchTitles",
             summary = "Search and filter titles",
@@ -128,9 +132,10 @@ class TitleController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Page of titles",
-                    content = @Content(schema = @Schema(implementation = Page.class))),
+                    content = @Content(schema = @Schema(implementation = TitleResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest")
     })
+    @GetMapping
     @Parameters({
             @Parameter(name = "search", description = "Search text", example = "chainsaw man"),
             @Parameter(name = "type", description = "Filter by type", example = "MANGA"),
@@ -165,9 +170,6 @@ class TitleController {
         return titleService.getAll(spec, pageable);
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             operationId = "deleteTitle",
             summary = "Delete title",
@@ -179,6 +181,9 @@ class TitleController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(BY_ID)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTitle(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -186,8 +191,6 @@ class TitleController {
         titleService.delete(id);
     }
 
-    @PutMapping("/{id}/slug")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateTitleSlug",
             summary = "Update slug",
@@ -202,6 +205,8 @@ class TitleController {
             @ApiResponse(responseCode = "404", ref = "NotFound"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(BY_ID + "/slug")
     public TitleResponse updateTitleSlug(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,
@@ -210,8 +215,6 @@ class TitleController {
         return titleService.updateSlug(id, request);
     }
 
-    @PostMapping("/{id}/authors")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "addAuthorToTitle",
             summary = "Add author",
@@ -225,6 +228,8 @@ class TitleController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(BY_ID + "/authors")
     public TitleResponse addAuthor(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,
@@ -233,8 +238,6 @@ class TitleController {
         return titleService.addAuthor(id, request.authorId(), request.role());
     }
 
-    @DeleteMapping("/{id}/authors/{authorId}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "removeAuthorFromTitle",
             summary = "Remove author",
@@ -247,6 +250,8 @@ class TitleController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(BY_ID + "/authors/{authorId}")
     public TitleResponse removeAuthor(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,
@@ -256,8 +261,6 @@ class TitleController {
         return titleService.removeAuthor(id, authorId);
     }
 
-    @DeleteMapping("/{id}/publisher")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "removePublisherFromTitle",
             summary = "Remove publisher",
@@ -270,6 +273,8 @@ class TitleController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(BY_ID + "/publisher")
     public TitleResponse removePublisher(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -277,8 +282,6 @@ class TitleController {
         return titleService.removePublisher(id);
     }
 
-    @PostMapping("/{id}/tags")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "replaceTitleTags",
             summary = "Replace tags",
@@ -292,6 +295,8 @@ class TitleController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(BY_ID + "/tags")
     public TitleResponse updateTags(
             @Parameter(description = "Title UUID", required = true)
             @PathVariable @NotNull UUID id,

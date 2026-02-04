@@ -1,5 +1,6 @@
 package dev.harakki.comics.shared.utils;
 
+import lombok.experimental.UtilityClass;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -8,9 +9,10 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class SecurityUtils {
+@UtilityClass
+public class SecurityUtils {
 
-    public static Optional<Jwt> getCurrentJwt() {
+    public Optional<Jwt> getCurrentJwt() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
@@ -19,31 +21,27 @@ public final class SecurityUtils {
         return Optional.empty();
     }
 
-    public static UUID getCurrentUserId() {
+    public UUID getCurrentUserId() {
         return getCurrentJwt()
                 .map(Jwt::getSubject)
                 .map(UUID::fromString)
                 .orElseThrow(() -> new AccessDeniedException("No authenticated user found"));
     }
 
-    public static Optional<UUID> getOptionalCurrentUserId() {
+    public Optional<UUID> getOptionalCurrentUserId() {
         return getCurrentJwt().map(Jwt::getSubject).map(UUID::fromString);
     }
 
-    public static String getCurrentUsername() {
+    public String getCurrentUserUsername() {
         return getCurrentJwt()
                 .map(jwt -> jwt.<String>getClaim("preferred_username"))
                 .orElseThrow(() -> new AccessDeniedException("No authenticated user found"));
     }
 
-    public static String getCurrentUserEmail() {
+    public String getCurrentUserEmail() {
         return getCurrentJwt()
                 .map(jwt -> jwt.<String>getClaim("email"))
                 .orElseThrow(() -> new AccessDeniedException("No authenticated user found"));
-    }
-
-    private SecurityUtils() {
-        // Prevent instantiation
     }
 
 }

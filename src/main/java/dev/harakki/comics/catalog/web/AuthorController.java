@@ -36,9 +36,14 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = "/api/v1/authors", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = AuthorController.REQUEST_MAPPING, produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Authors", description = "Management of comic creators.")
 class AuthorController {
+
+    static final String REQUEST_MAPPING = "/api/v1/authors";
+
+    static final String BY_ID = "/{id}";
+    static final String BY_SLUG = "/slug/{slug}";
 
     private final AuthorService authorService;
 
@@ -55,9 +60,9 @@ class AuthorController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
     public AuthorResponse createAuthor(@RequestBody @Valid AuthorCreateRequest request) {
         return authorService.create(request);
     }
@@ -75,8 +80,8 @@ class AuthorController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(BY_ID)
     public AuthorResponse updateAuthor(
             @Parameter(description = "Author UUID", required = true)
             @PathVariable UUID id,
@@ -95,7 +100,7 @@ class AuthorController {
                     content = @Content(schema = @Schema(implementation = AuthorResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    @GetMapping("/{id}")
+    @GetMapping(BY_ID)
     public AuthorResponse getAuthor(
             @Parameter(description = "Author UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -113,7 +118,7 @@ class AuthorController {
                     content = @Content(schema = @Schema(implementation = AuthorResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    @GetMapping("/slug/{slug}")
+    @GetMapping(BY_SLUG)
     public AuthorResponse getAuthorBySlug(
             @Parameter(description = "URL slug", example = "tatsuki-fujimoto", required = true)
             @PathVariable @NotNull String slug
@@ -128,14 +133,14 @@ class AuthorController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Page of authors",
-                    content = @Content(schema = @Schema(implementation = Page.class))),
+                    content = @Content(schema = @Schema(implementation = AuthorResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest")
     })
+    @GetMapping
     @Parameters({
             @Parameter(name = "search", description = "Search by name or slug", example = "fujimoto"),
             @Parameter(name = "country", description = "Filter by Country ISO Code", example = "JP")
     })
-    @GetMapping
     public Page<AuthorResponse> getAllAuthors(
             @Or({
                     @Spec(path = "name", params = "search", spec = LikeIgnoreCase.class),
@@ -161,9 +166,9 @@ class AuthorController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(BY_ID)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAuthor(
             @Parameter(description = "Author UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -185,8 +190,8 @@ class AuthorController {
             @ApiResponse(responseCode = "404", ref = "NotFound"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
-    @PutMapping("/{id}/slug")
     @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(BY_ID + "/slug")
     public AuthorResponse updateAuthorSlug(
             @Parameter(description = "Author UUID", required = true)
             @PathVariable @NotNull UUID id,

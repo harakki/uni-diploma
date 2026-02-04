@@ -60,7 +60,7 @@ class S3Config {
 
     @Bean
     CommandLineRunner initBucket(S3Client s3Client) {
-        return args -> {
+        return _ -> {
             try {
                 s3Client.headBucket(b -> b.bucket(bucket));
             } catch (NoSuchBucketException e) {

@@ -21,11 +21,11 @@ import java.util.List;
 @RequiredArgsConstructor
 class MediaCleanupScheduler {
 
+    private static final long ORPHAN_THRESHOLD_MINUTES = 60L;
+
     private final MediaRepository mediaRepository;
 
     private final S3Client s3Client;
-
-    private static final long ORPHAN_THRESHOLD_MINUTES = 60L;
 
     @Value("${s3.bucket}")
     private String bucket;

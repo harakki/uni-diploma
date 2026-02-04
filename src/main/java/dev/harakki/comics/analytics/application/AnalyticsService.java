@@ -29,7 +29,27 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class AnalyticsService {
 
-    private final UserInteractionRepository interactionRepository;
+    private final UserInteractionRepository userInteractionRepository;
+
+    public TitleAnalyticsResponse getTitleAnalytics(UUID titleId) {
+        var averageRating = getAverageRatingForTitle(titleId);
+        var totalViews = getTotalViewCount(titleId);
+
+        return new TitleAnalyticsResponse(
+                titleId,
+                averageRating,
+                totalViews != null ? totalViews : 0L,
+                Instant.now()
+        );
+    }
+
+    public Double getAverageRatingForTitle(UUID titleId) {
+        return userInteractionRepository.getAverageRating(titleId);
+    }
+
+    public Long getTotalViewCount(UUID titleId) {
+        return userInteractionRepository.countByTargetIdAndType(titleId, InteractionType.TITLE_VIEWED);
+    }
 
     @Transactional
     public void recordChapterRead(ChapterReadEvent event) {
@@ -42,7 +62,7 @@ public class AnalyticsService {
                         "readTimeMillis", event.readTimeMillis()
                 ))
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -52,7 +72,7 @@ public class AnalyticsService {
                 .type(InteractionType.TITLE_LIKED)
                 .targetId(event.titleId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -62,7 +82,7 @@ public class AnalyticsService {
                 .type(InteractionType.TITLE_DISLIKED)
                 .targetId(event.titleId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -72,7 +92,7 @@ public class AnalyticsService {
                 .type(InteractionType.TITLE_VIEWED)
                 .targetId(event.titleId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -82,7 +102,7 @@ public class AnalyticsService {
                 .type(InteractionType.TITLE_ADDED_TO_LIBRARY)
                 .targetId(event.titleId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -92,7 +112,7 @@ public class AnalyticsService {
                 .type(InteractionType.TITLE_REMOVED_FROM_LIBRARY)
                 .targetId(event.titleId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -103,7 +123,7 @@ public class AnalyticsService {
                 .targetId(event.titleId())
                 .metadata(Map.of("titleName", event.titleName()))
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -113,7 +133,7 @@ public class AnalyticsService {
                 .type(InteractionType.TITLE_UPDATED)
                 .targetId(event.titleId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -123,7 +143,7 @@ public class AnalyticsService {
                 .type(InteractionType.TITLE_DELETED)
                 .targetId(event.titleId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -134,7 +154,7 @@ public class AnalyticsService {
                 .targetId(event.authorId())
                 .metadata(Map.of("authorName", event.authorName()))
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -144,7 +164,7 @@ public class AnalyticsService {
                 .type(InteractionType.AUTHOR_UPDATED)
                 .targetId(event.authorId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -154,7 +174,7 @@ public class AnalyticsService {
                 .type(InteractionType.AUTHOR_DELETED)
                 .targetId(event.authorId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -165,7 +185,7 @@ public class AnalyticsService {
                 .targetId(event.publisherId())
                 .metadata(Map.of("publisherName", event.publisherName()))
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -175,7 +195,7 @@ public class AnalyticsService {
                 .type(InteractionType.PUBLISHER_UPDATED)
                 .targetId(event.publisherId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -185,7 +205,7 @@ public class AnalyticsService {
                 .type(InteractionType.PUBLISHER_DELETED)
                 .targetId(event.publisherId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -199,7 +219,7 @@ public class AnalyticsService {
                         "chapterNumber", event.chapterNumber()
                 ))
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -210,7 +230,7 @@ public class AnalyticsService {
                 .targetId(event.chapterId())
                 .metadata(Map.of("titleId", event.titleId()))
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -221,7 +241,7 @@ public class AnalyticsService {
                 .targetId(event.chapterId())
                 .metadata(Map.of("titleId", event.titleId()))
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -232,7 +252,7 @@ public class AnalyticsService {
                 .targetId(event.collectionId())
                 .metadata(Map.of("collectionName", event.collectionName()))
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -242,7 +262,7 @@ public class AnalyticsService {
                 .type(InteractionType.COLLECTION_UPDATED)
                 .targetId(event.collectionId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -252,7 +272,7 @@ public class AnalyticsService {
                 .type(InteractionType.COLLECTION_DELETED)
                 .targetId(event.collectionId())
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -263,7 +283,7 @@ public class AnalyticsService {
                 .targetId(event.titleId())
                 .metadata(Map.of("collectionId", event.collectionId()))
                 .build();
-        interactionRepository.save(interaction);
+        userInteractionRepository.save(interaction);
     }
 
     @Transactional
@@ -274,27 +294,7 @@ public class AnalyticsService {
                 .targetId(event.titleId())
                 .metadata(Map.of("collectionId", event.collectionId()))
                 .build();
-        interactionRepository.save(interaction);
-    }
-
-    public Double getAverageRatingForTitle(UUID titleId) {
-        return interactionRepository.getAverageRating(titleId);
-    }
-
-    public Long getTotalViewCount(UUID titleId) {
-        return interactionRepository.countByTargetIdAndType(titleId, InteractionType.TITLE_VIEWED);
-    }
-
-    public TitleAnalyticsResponse getTitleAnalytics(UUID titleId) {
-        var averageRating = getAverageRatingForTitle(titleId);
-        var totalViews = getTotalViewCount(titleId);
-
-        return new TitleAnalyticsResponse(
-                titleId,
-                averageRating,
-                totalViews != null ? totalViews : 0L,
-                Instant.now()
-        );
+        userInteractionRepository.save(interaction);
     }
 
 }

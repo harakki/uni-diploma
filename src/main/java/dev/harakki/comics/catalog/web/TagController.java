@@ -28,15 +28,17 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = "/api/v1/tags", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = TagController.REQUEST_MAPPING, produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Tags", description = "Management of comic tags/genres.")
 class TagController {
 
+    static final String REQUEST_MAPPING = "/api/v1/tags";
+
+    static final String BY_ID = "/{id}";
+    static final String BY_SLUG = "/slug/{slug}";
+
     private final TagService tagService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "createTag",
             summary = "Create tag",
@@ -50,12 +52,13 @@ class TagController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public TagResponse createTag(@RequestBody @Valid TagCreateRequest request) {
         return tagService.create(request);
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateTag",
             summary = "Update tag",
@@ -69,6 +72,8 @@ class TagController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(BY_ID)
     public TagResponse updateTag(
             @Parameter(description = "Tag UUID", required = true)
             @PathVariable @NotNull UUID id,
@@ -77,7 +82,6 @@ class TagController {
         return tagService.update(id, request);
     }
 
-    @GetMapping("/{id}")
     @Operation(
             operationId = "getTagById",
             summary = "Get tag by ID",
@@ -88,6 +92,7 @@ class TagController {
                     content = @Content(schema = @Schema(implementation = TagResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping(BY_ID)
     public TagResponse getTag(
             @Parameter(description = "Tag UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -95,7 +100,6 @@ class TagController {
         return tagService.getById(id);
     }
 
-    @GetMapping("/slug/{slug}")
     @Operation(
             operationId = "getTagBySlug",
             summary = "Get tag by slug",
@@ -106,6 +110,7 @@ class TagController {
                     content = @Content(schema = @Schema(implementation = TagResponse.class))),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @GetMapping(BY_SLUG)
     public TagResponse getTagBySlug(
             @Parameter(description = "URL slug", example = "action", required = true)
             @PathVariable String slug
@@ -113,7 +118,6 @@ class TagController {
         return tagService.getBySlug(slug);
     }
 
-    @GetMapping
     @Operation(
             operationId = "getAllTags",
             summary = "Get all tags",
@@ -121,18 +125,16 @@ class TagController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Page of tags",
-                    content = @Content(schema = @Schema(implementation = Page.class))),
+                    content = @Content(schema = @Schema(implementation = TagResponse.class))),
             @ApiResponse(responseCode = "400", ref = "BadRequest")
     })
+    @GetMapping
     public Page<TagResponse> getAllTags(
             @ParameterObject @PageableDefault(sort = "name") Pageable pageable
     ) {
         return tagService.getAll(pageable);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "deleteTag",
             summary = "Delete tag",
@@ -144,6 +146,9 @@ class TagController {
             @ApiResponse(responseCode = "403", ref = "Forbidden"),
             @ApiResponse(responseCode = "404", ref = "NotFound")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(BY_ID)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTag(
             @Parameter(description = "Tag UUID", required = true)
             @PathVariable @NotNull UUID id
@@ -151,8 +156,6 @@ class TagController {
         tagService.delete(id);
     }
 
-    @PutMapping("/{id}/slug")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             operationId = "updateTagSlug",
             summary = "Update slug",
@@ -167,6 +170,8 @@ class TagController {
             @ApiResponse(responseCode = "404", ref = "NotFound"),
             @ApiResponse(responseCode = "409", ref = "Conflict")
     })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(BY_ID + "/slug")
     public TagResponse updateTagSlug(
             @Parameter(description = "Tag UUID", required = true)
             @PathVariable @NotNull UUID id,

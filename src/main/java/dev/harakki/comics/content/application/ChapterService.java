@@ -13,6 +13,7 @@ import dev.harakki.comics.media.api.MediaDeleteRequestedEvent;
 import dev.harakki.comics.media.api.MediaFixateRequestedEvent;
 import dev.harakki.comics.media.api.MediaUrlProvider;
 import dev.harakki.comics.shared.api.ChapterReadHistoryProvider;
+import dev.harakki.comics.shared.exception.ResourceNotAvailableException;
 import dev.harakki.comics.shared.exception.ResourceNotFoundException;
 import dev.harakki.comics.shared.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -202,20 +200,30 @@ public class ChapterService {
         log.info("Published chapter read event: chapterId={}, userId={}", chapterId, request.userId());
     }
 
-    public ChapterReadStatusResponse isChapterRead(UUID chapterId, UUID titleId, UUID userId) {
+    public ChapterReadStatusResponse isChapterRead(UUID chapterId, UUID titleId) {
         if (!chapterRepository.existsById(chapterId)) {
             throw new ResourceNotFoundException("Chapter not found");
+        }
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        if (Objects.isNull(userId)) {
+            throw new ResourceNotAvailableException("User ID must be provided to check read status");
         }
 
         boolean isRead = chapterReadHistoryProvider.isChapterRead(userId, chapterId);
         return new ChapterReadStatusResponse(chapterId, isRead);
     }
 
-    public NextChapterResponse getNextUnreadChapter(UUID userId, UUID titleId) {
+    public NextChapterResponse getNextUnreadChapter(UUID titleId) {
         List<Chapter> chapters = chapterRepository.findAllByTitleId(titleId);
 
         if (chapters.isEmpty()) {
             return NextChapterResponse.noChapter();
+        }
+
+        var userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        if (Objects.isNull(userId)) {
+            throw new ResourceNotAvailableException("User ID must be provided to check read status");
         }
 
         List<UUID> chapterIds = chapters.stream().map(Chapter::getId).toList();

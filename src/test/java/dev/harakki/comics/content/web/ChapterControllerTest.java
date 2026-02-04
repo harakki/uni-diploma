@@ -342,7 +342,7 @@ class ChapterControllerTest {
         UUID titleId = UUID.randomUUID();
         UUID chapterId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        when(chapterService.isChapterRead(eq(chapterId), eq(titleId), eq(userId)))
+        when(chapterService.isChapterRead(eq(chapterId), eq(titleId)))
                 .thenReturn(new ChapterReadStatusResponse(chapterId, true));
 
         mockMvc.perform(get("/api/v1/titles/{titleId}/chapters/{chapterId}/read", titleId, chapterId)
@@ -367,7 +367,7 @@ class ChapterControllerTest {
         UUID titleId = UUID.randomUUID();
         UUID chapterId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        when(chapterService.isChapterRead(eq(chapterId), eq(titleId), eq(userId)))
+        when(chapterService.isChapterRead(eq(chapterId), eq(titleId)))
                 .thenThrow(new ResourceNotFoundException("Chapter not found"));
 
         mockMvc.perform(get("/api/v1/titles/{titleId}/chapters/{chapterId}/read", titleId, chapterId)
@@ -383,7 +383,7 @@ class ChapterControllerTest {
         UUID userId = UUID.randomUUID();
         UUID titleId = UUID.randomUUID();
         UUID nextChapterId = UUID.randomUUID();
-        when(chapterService.getNextUnreadChapter(eq(userId), eq(titleId)))
+        when(chapterService.getNextUnreadChapter(eq(titleId)))
                 .thenReturn(new NextChapterResponse(nextChapterId, "2", "Chapter 2", true));
 
         mockMvc.perform(get("/api/v1/users/{userId}/titles/{titleId}/next-chapter", userId, titleId)
@@ -395,7 +395,7 @@ class ChapterControllerTest {
     void getNextUnreadChapter_notFound() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID titleId = UUID.randomUUID();
-        when(chapterService.getNextUnreadChapter(eq(userId), eq(titleId)))
+        when(chapterService.getNextUnreadChapter(eq(titleId)))
                 .thenThrow(new ResourceNotFoundException("Title not found"));
 
         mockMvc.perform(get("/api/v1/users/{userId}/titles/{titleId}/next-chapter", userId, titleId)

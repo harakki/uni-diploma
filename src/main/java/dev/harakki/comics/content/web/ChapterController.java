@@ -2,14 +2,6 @@ package dev.harakki.comics.content.web;
 
 import dev.harakki.comics.content.application.ChapterService;
 import dev.harakki.comics.content.dto.*;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,133 +14,51 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = ChapterController.REQUEST_MAPPING, produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Chapters", description = "Management of comic chapters.")
-public class ChapterController {
-
-    static final String REQUEST_MAPPING = "/api/v1/";
+@RequestMapping(path = "/api/v1/", produces = MediaType.APPLICATION_JSON_VALUE)
+public class ChapterController implements ChapterApi {
 
     private final ChapterService chapterService;
 
-    @Operation(
-            operationId = "createChapter",
-            summary = "Create chapter",
-            description = "Create a chapter and link uploaded pages to it."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Chapter created"),
-            @ApiResponse(responseCode = "400", ref = "BadRequest"),
-            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
-            @ApiResponse(responseCode = "403", ref = "Forbidden"),
-            @ApiResponse(responseCode = "404", ref = "NotFound")
-    })
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/titles/{titleId}/chapters")
     @ResponseStatus(HttpStatus.CREATED)
     public void createChapter(
-            @Parameter(description = "Title UUID", required = true)
             @PathVariable UUID titleId,
             @RequestBody @Valid ChapterCreateRequest request
     ) {
         chapterService.create(titleId, request);
     }
 
-    @Operation(
-            operationId = "getTitleChapters",
-            summary = "Get title chapters",
-            description = "List all chapters for a title (without pages)."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Chapters retrieved",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ChapterSummaryResponse.class)))),
-            @ApiResponse(responseCode = "404", ref = "NotFound")
-    })
     @GetMapping("/titles/{titleId}/chapters")
-    public List<ChapterSummaryResponse> getTitleChapters(
-            @Parameter(description = "Title UUID", required = true)
-            @PathVariable UUID titleId
-    ) {
+    public List<ChapterSummaryResponse> getTitleChapters(@PathVariable UUID titleId) {
         return chapterService.getChaptersByTitle(titleId);
     }
 
-    @Operation(
-            operationId = "getChapterDetails",
-            summary = "Get specific chapter content",
-            description = "Get chapter metadata and all page URLs."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Chapter details",
-                    content = @Content(schema = @Schema(implementation = ChapterDetailsResponse.class))),
-            @ApiResponse(responseCode = "404", ref = "NotFound")
-    })
     @GetMapping("/chapters/{chapterId}")
-    public ChapterDetailsResponse getChapterDetails(
-            @Parameter(description = "Chapter UUID", required = true)
-            @PathVariable UUID chapterId
-    ) {
+    public ChapterDetailsResponse getChapterDetails(@PathVariable UUID chapterId) {
         return chapterService.getChapterDetails(chapterId);
     }
 
-    @Operation(
-            operationId = "updateChapter",
-            summary = "Update chapter info",
-            description = "Update number, name or volume."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Chapter updated"),
-            @ApiResponse(responseCode = "400", ref = "BadRequest"),
-            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
-            @ApiResponse(responseCode = "403", ref = "Forbidden"),
-            @ApiResponse(responseCode = "404", ref = "NotFound")
-    })
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/chapters/{chapterId}")
     public void updateChapter(
-            @Parameter(description = "Chapter UUID", required = true)
             @PathVariable UUID chapterId,
             @RequestBody @Valid ChapterUpdateRequest request
     ) {
         chapterService.updateMetadata(chapterId, request);
     }
 
-    @Operation(
-            operationId = "deleteChapter",
-            summary = "Delete chapter",
-            description = "Delete chapter and all associated pages."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Chapter deleted"),
-            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
-            @ApiResponse(responseCode = "403", ref = "Forbidden"),
-            @ApiResponse(responseCode = "404", ref = "NotFound")
-    })
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/chapters/{chapterId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteChapter(
-            @Parameter(description = "Chapter UUID", required = true)
-            @PathVariable UUID chapterId
-    ) {
+    public void deleteChapter(@PathVariable UUID chapterId) {
         chapterService.delete(chapterId);
     }
 
-    @Operation(
-            operationId = "updateChapterPages",
-            summary = "Update pages order/content",
-            description = "Full replacement of pages list. Used for reordering, adding or deleting pages for a chapter."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Pages updated"),
-            @ApiResponse(responseCode = "400", ref = "BadRequest"),
-            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
-            @ApiResponse(responseCode = "403", ref = "Forbidden"),
-            @ApiResponse(responseCode = "404", ref = "NotFound")
-    })
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/chapters/{chapterId}/pages")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updatePages(
-            @Parameter(description = "Chapter UUID", required = true)
             @PathVariable UUID chapterId,
             @RequestBody @Valid ChapterPagesUpdateRequest request
     ) {
